@@ -103,3 +103,12 @@ Thumbs.db
 .env
 .venv/
 venv/
+*.bak
+requirements_lock.txt.bak
+
+# KD 실험 부산물 (아직 수렴 중)
+results/teacher_soft/
+models/exp09_*
+logs/exp09_*
+logs/kd_*
+logs/teacher_soft_*

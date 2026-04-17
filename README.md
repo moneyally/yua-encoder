@@ -1,3 +1,19 @@
+---
+language: ko
+tags:
+- image-classification
+- emotion-recognition
+- korean-face
+- facial-expression
+- ensemble
+- vit
+- siglip
+- resnet50
+- efficientnet
+library_name: pytorch
+pipeline_tag: image-classification
+---
+
 # 표정이야기 — HybridFER-4E
 
 한국인 얼굴 이미지에서 4감정(anger / happy / panic / sadness)을 분류하는 모델. CNN·ViT·SigLIP 세 트랙을 개별 학습 후 soft voting 으로 묶는다.
@@ -136,7 +152,6 @@ for c, p in zip(CLASSES, probs):
 # Cell 4 — 배치 추론 유틸
 import csv
 from pathlib import Path
-from PIL import Image
 
 IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
@@ -238,22 +253,46 @@ else:
 
 `predict.py` 가 확장자로 자동 판별한다.
 
+### 모델 가중치 다운로드
+
+`.h5` / `.pt` 파일은 GitHub 100MB/file 제한 때문에 레포에 포함되지 않는다. [Releases](https://github.com/moneyally/yua-encoder/releases) 페이지에서 내려받아 `models/` 아래에 둬야 `ensemble_*.json` 이 동작한다.
+
+```bash
+# 1) gh CLI 로 전체 다운로드 (권장)
+gh release download v2026-04-e8 -R moneyally/yua-encoder -D models/ \
+    --pattern "*.h5" --pattern "*.pt"
+
+# 2) 또는 브라우저에서 Releases 페이지 직접 다운로드
+#    https://github.com/moneyally/yua-encoder/releases/tag/v2026-04-e8
+
+# 3) curl 개별 다운로드 (공개 URL)
+for f in exp02_resnet50_ft_crop_aug.h5 exp04_effnet_ft_balanced.h5 \
+         exp05_vit_b16_two_stage.pt    exp06_siglip_linear_probe.pt; do
+    curl -L -o "models/$f" \
+        "https://github.com/moneyally/yua-encoder/releases/download/v2026-04-e8/$f"
+done
+```
+
+Release 파일 총 용량 약 1.3GB (ResNet50 205M + EfficientNet-B0 32M + ViT-B/16 328M + SigLIP+yua-encoder 468M + sha256 체크섬).
+
 ### 앙상블 Config 구조 (`ensemble_*.json`)
 
 ```json
 {
-  "_val_acc": 0.8442,
+  "_val_acc": 0.844167,
+  "_val_macro_f1": 0.845826,
+  "_val_nll": 0.502313,
   "_method": "weight_opt_raw",
   "models": [
-    {"path": "models/exp02_resnet50_ft_crop_aug.h5",   "weight": 0.042},
-    {"path": "models/exp04_effnet_ft_balanced.h5",     "weight": 0.107},
-    {"path": "models/exp05_vit_b16_two_stage.pt",      "weight": 0.382},
-    {"path": "models/exp06_siglip_linear_probe.pt",    "weight": 0.469}
+    {"path": "models/exp02_resnet50_ft_crop_aug.h5",   "weight": 0.134425},
+    {"path": "models/exp04_effnet_ft_balanced.h5",     "weight": 0.115084},
+    {"path": "models/exp05_vit_b16_two_stage.pt",      "weight": 0.287014},
+    {"path": "models/exp06_siglip_linear_probe.pt",    "weight": 0.463477}
   ]
 }
 ```
 
-4개 모델의 softmax 출력을 weight 로 가중합 → argmax. weight 는 validation set 기준 Differential Evolution 으로 최적화.
+4개 모델의 softmax 출력을 weight 로 가중합 → argmax. weight 는 validation set 기준 Differential Evolution 으로 최적화. `ensemble_best.json` 은 학습 bbox 기준 (val_acc 0.86), `ensemble_mtcnn.json` 은 MTCNN auto-crop 기준 (val_acc 0.8442) — 두 파일의 weight 값이 다른 이유.
 
 ## Performance (val 1200장, 4-class balanced)
 
@@ -265,8 +304,8 @@ else:
 | E4 | EfficientNet-B0 ft (block6) | 0.7958 | 0.7526 | - | CNN 최고 |
 | E5 | ViT-B/16 (timm) 2-stage | 0.8458 | 0.5234 | 0.8470 | single-model best |
 | E6 | SigLIP + projection MLP (linear probe) | 0.8192 | 0.7338 | 0.8183 | yua-encoder |
-| E8a | Ensemble (E2+E4+E5+E6, bbox) | **0.8600** | - | 0.8603 | 학습조건 상한 |
-| **E8b** | **Ensemble + MTCNN auto-crop** | **0.8442** | - | - | **bbox-free inference** |
+| E8a | Ensemble (E2+E4+E5+E6, bbox) | **0.8600** | 0.4555 | 0.8603 | 학습조건 상한 |
+| **E8b** | **Ensemble + MTCNN auto-crop** | **0.8442** | 0.5023 | 0.8458 | **bbox-free inference (제출 권장)** |
 
 3-rater 전원일치 61.1%, 다수결 90.5%. 앙상블(0.84~0.86)은 ceiling(0.88 권역) 근방.
 
@@ -417,27 +456,119 @@ emotion-project/
 │
 ├── docs/
 │   ├── 보고서.md               # 2026 표준 누적형 8섹션
-│   ├── WBS.md                  # 일자별 task × 담당자
 │   └── 기획안_초안.txt
 │
 ├── logs/                       # csv + meta.json (stdout 제외)
 └── results/                    # EDA 시각화, ensemble 리포트
 ```
 
-## Requirements
+## Environment / Requirements
 
-```
-Python 3.10
-tensorflow==2.21.0
-torch==2.6.0+cu124
-timm==1.0.11
-transformers==5.5.4
-facenet-pytorch==2.6.0
-numpy / pandas / scikit-learn / matplotlib
-pillow / opencv-python
+### Hardware (개발·학습 환경)
+
+| | 값 |
+|---|---|
+| GPU | **NVIDIA A40 48GB** (compute capability 8.6) |
+| Driver | 580.126.09 |
+| CUDA | 12.4 |
+| cuDNN | 9.21.0 (torch 2.6 + TF 2.21 공통 호환 핵심 조건) |
+| Host | Linux 6.8 (RunPod 컨테이너) |
+
+### Software
+
+| 구성 | 버전 | 비고 |
+|---|---|---|
+| Python | 3.10.20 | conda env `user4_env` |
+| TensorFlow | 2.21.0 | Track A (CNN, `.h5`) |
+| PyTorch | 2.6.0+cu124 | Track B/C + KD |
+| timm | 1.0.26 | ViT-B/16 로더 |
+| transformers | 5.5.4 | SigLIP 백본 |
+| facenet-pytorch | 2.6.0 | MTCNN auto-crop |
+| scikit-learn | - | F1 / confusion matrix |
+| numpy / pandas / matplotlib / Pillow | - | 공통 |
+
+### 두 개의 requirements 파일
+
+| 파일 | 목적 | 크기 |
+|---|---|:-:|
+| **`requirements.txt`** | 학습·추론에 **필수** 한 21개 핵심만. 신규 셋업·Docker 빌드용. | 21줄 |
+| **`requirements_lock.txt`** | `pip freeze --all` 전체 스냅샷 (간접 의존 포함). **완전 재현용**. | 106줄 |
+
+실무 원칙:
+- **개발/실험**: `requirements.txt` (`>=` / `==` 혼합, 마이너 업데이트 허용)
+- **제출/재현**: `requirements_lock.txt` (모든 버전 `==` 완전 고정)
+- **두 파일 drift 방지**: 새 패키지 추가 시 `requirements.txt` 업데이트 후 `pip freeze --all > requirements_lock.txt` 재생성
+
+전체 환경 스냅샷 규칙:
+- `@ 로컬경로` 라인 자동 제거 (블로그 권고, 다른 머신 재현 불가 방지)
+- `pip` / `setuptools` / `wheel` 제외 (환경별 자동 제공)
+- Python 버전은 파일 헤더 주석에 명시 (lock 파일 자체 메타 부재 보완)
+
+### 환경 복구 — 원라이너
+
+**새 머신/pod 에서 1분 안에 동일 환경 만들기**:
+
+```bash
+# 레포 루트에서
+bash scripts/restore_env.sh user4_env
+conda activate user4_env
+
+# 정상 여부 확인
+python -c "
+import torch, tensorflow as tf
+print('torch:', torch.__version__, 'CUDA:', torch.cuda.is_available())
+print('TF:', tf.__version__, 'GPUs:', tf.config.list_physical_devices('GPU'))
+"
 ```
 
-전체 lock: `requirements_lock.txt`. CUDA 12.4, cuDNN 9.21.0.82 (TF 2.21 + torch 2.6 공통 호환).
+`restore_env.sh` 내부 (참고용):
+
+```bash
+conda create -y -n user4_env python=3.10
+conda run -n user4_env pip install --upgrade pip
+conda run -n user4_env pip install -r requirements_lock.txt
+```
+
+### 수동 설치 (스크립트 미사용 시)
+
+```bash
+# 1) conda env
+conda create -y -n emotion python=3.10
+conda activate emotion
+
+# 2) PyTorch (CUDA 12.4 기준)
+pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+
+# 3) TensorFlow + GPU 의존성
+pip install tensorflow==2.21.0
+
+# 4) 모델·추론 라이브러리
+pip install timm==1.0.26 transformers==5.5.4 facenet-pytorch==2.6.0
+
+# 5) 유틸리티
+pip install numpy pandas scikit-learn matplotlib Pillow opencv-python
+```
+
+> **주의 (cuDNN 버전 충돌)**: TF 2.21 과 torch 2.6 은 cuDNN 9.21.x 을 함께 써야 안정적이다. `nvidia-cudnn-cu12` 가 9.3+ 로 올라가면 TF matmul 이 깨진다. `pip install "nvidia-cudnn-cu12>=9.3,<10"` 로 재고정해야 복구된다.
+
+### 환경 변수
+
+| 변수 | 기본값 | 용도 |
+|---|---|---|
+| `EMOTION_PROJECT_ROOT` | 레포 루트 (자동) | 모든 스크립트가 경로 조립에 사용 |
+| `CUDA_VISIBLE_DEVICES` | (unset) | 특정 GPU 만 쓰려면 `0` / `1` 등 |
+| `TF_ENABLE_ONEDNN_OPTS` | 1 (기본) | `0` 으로 끄면 재현성 개선 (속도 ↓) |
+
+`.env` 는 사용하지 않음 (외부 API 키 없음).
+
+### 디스크 / 메모리 요구사항
+
+| 항목 | 최소 | 권장 |
+|---|---|---|
+| 디스크 (코드+모델+데이터) | 20GB | 50GB |
+| RAM | 16GB | 32GB+ (DataLoader num_workers 16 기준) |
+| VRAM (추론 단일 모델) | 8GB | 12GB (TTA 5crop 포함) |
+| VRAM (앙상블 4 모델) | 24GB | 40GB+ |
 
 ## Limitations
 
@@ -464,7 +595,7 @@ pillow / opencv-python
 - 하창수
 - 엄정원
 
-트랙 C SigLIP projection wrapper (`yua-encoder`) 는 팀 자체 설계. 역할 분담과 일정은 `docs/WBS.md` 참고.
+트랙 C SigLIP projection wrapper (`yua-encoder`) 는 팀 자체 설계.
 
 ## Troubleshooting
 

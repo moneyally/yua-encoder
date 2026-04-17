@@ -1,0 +1,50 @@
+# ============================================================
+# requirements.txt — 핵심 의존성 (학습·추론 필수)
+# Python 3.10 · CUDA 12.4 · cuDNN 9.21.0
+#
+# 전체 환경 스냅샷 (pip freeze --all, 106개 패키지):
+#   → requirements_lock.txt
+#
+# 설치:
+#   pip install -r requirements.txt
+#   # 또는 완전 재현:
+#   pip install -r requirements_lock.txt
+# ============================================================
+
+# Deep Learning frameworks
+torch==2.6.0+cu124
+torchvision==0.21.0+cu124
+tensorflow==2.21.0
+
+# NVIDIA CUDA / cuDNN (torch + TF 공통 호환 조건)
+# ※ nvidia-cudnn-cu12 는 9.3+ 로 올라가면 TF matmul 깨짐 — 9.21.x 유지
+nvidia-cudnn-cu12==9.21.0.82
+
+# Vision backbones
+timm==1.0.26
+transformers==5.5.4
+tokenizers==0.22.2
+safetensors==0.7.0
+huggingface-hub>=0.25
+
+# Face detection
+facenet-pytorch==2.6.0
+
+# Data / image
+numpy==1.26.4
+Pillow==10.2.0
+opencv-python==4.13.0.92
+h5py==3.14.0
+
+# Scientific
+scipy==1.15.3
+scikit-learn==1.7.2
+pandas==2.3.3
+
+# Visualization
+matplotlib==3.10.8
+
+# CLI / utilities
+tqdm==4.67.3
+rich==15.0.0
+requests==2.33.1
