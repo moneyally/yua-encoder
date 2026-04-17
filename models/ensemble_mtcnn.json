@@ -1,0 +1,51 @@
+{
+  "_method": "weight_opt_raw",
+  "_val_acc": 0.844167,
+  "_val_macro_f1": 0.845826,
+  "_val_nll": 0.502313,
+  "_per_model": {
+    "exp02_resnet50_ft_crop_aug": {
+      "val_acc": 0.745,
+      "val_macro_f1": 0.74493,
+      "val_nll": 0.694815,
+      "temperature": 0.8707
+    },
+    "exp04_effnet_ft_balanced": {
+      "val_acc": 0.779167,
+      "val_macro_f1": 0.78228,
+      "val_nll": 0.602566,
+      "temperature": 0.9918
+    },
+    "exp05_vit_b16_two_stage": {
+      "val_acc": 0.825833,
+      "val_macro_f1": 0.828542,
+      "val_nll": 0.545833,
+      "temperature": 1.0892
+    },
+    "exp06_siglip_linear_probe": {
+      "val_acc": 0.794167,
+      "val_macro_f1": 0.794254,
+      "val_nll": 0.555663,
+      "temperature": 0.7154
+    }
+  },
+  "_notes": "ensemble_search.py 가 선택한 최적 방법. temperature 는 참고값. predict.py 는 weight 만 사용 (raw weighted voting).",
+  "models": [
+    {
+      "path": "models/exp02_resnet50_ft_crop_aug.h5",
+      "weight": 0.134425
+    },
+    {
+      "path": "models/exp04_effnet_ft_balanced.h5",
+      "weight": 0.115084
+    },
+    {
+      "path": "models/exp05_vit_b16_two_stage.pt",
+      "weight": 0.287014
+    },
+    {
+      "path": "models/exp06_siglip_linear_probe.pt",
+      "weight": 0.463477
+    }
+  ]
+}

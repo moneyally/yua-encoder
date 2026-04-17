@@ -1,0 +1,305 @@
+{
+  "name": "exp05_vit_b16_two_stage",
+  "args": {
+    "name": "exp05_vit_b16_two_stage",
+    "model": "vit_base_patch16_224",
+    "data": "/workspace/user4/emotion-project/data_rot",
+    "epochs": 15,
+    "batch_size": 32,
+    "img_size": 224,
+    "lr": 0.001,
+    "lr_backbone": 5e-05,
+    "dropout": 0.0,
+    "crop": true,
+    "augment": true,
+    "patience": 5,
+    "note": "E5 ViT-B/16 + 2-stage(5A+15B) + crop+aug + bf16",
+    "seed": 42,
+    "label_smoothing": 0.1,
+    "weight_decay": 0.0001,
+    "warmup_epochs": 2,
+    "monitor": "val_accuracy",
+    "two_stage": true,
+    "stage_a_epochs": 5,
+    "stage_a_warmup": 0,
+    "num_workers": 4,
+    "amp": "bf16",
+    "limit_train_samples": 0,
+    "limit_val_samples": 0,
+    "aug_rot_deg": 10.0,
+    "aug_hflip_prob": 0.5,
+    "aug_jitter_bright": 0.2,
+    "aug_jitter_contrast": 0.2,
+    "aug_jitter_saturation": 0.1,
+    "aug_jitter_hue": 0.05,
+    "min_lr_ratio": 0.01,
+    "grad_clip_norm": 1.0,
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "adam_eps": 1e-08
+  },
+  "epochs_run": 19,
+  "history": [
+    {
+      "epoch": 1,
+      "stage": "A",
+      "train_loss": 1.0317951459910109,
+      "train_acc": 0.6118157543391188,
+      "val_loss": 0.9794808085759481,
+      "val_acc": 0.6608333333333334,
+      "val_f1": 0.6546391416727623,
+      "lr": 0.000905463412215599,
+      "time_sec": 145.85
+    },
+    {
+      "epoch": 2,
+      "stage": "A",
+      "train_loss": 0.9125783542128845,
+      "train_acc": 0.6862483311081442,
+      "val_loss": 0.9122499553362529,
+      "val_acc": 0.7025,
+      "val_f1": 0.7002072667973135,
+      "lr": 0.000657963412215599,
+      "time_sec": 141.77
+    },
+    {
+      "epoch": 3,
+      "stage": "A",
+      "train_loss": 0.8780516203000485,
+      "train_acc": 0.7171228304405874,
+      "val_loss": 0.895281769434611,
+      "val_acc": 0.7158333333333333,
+      "val_f1": 0.7123935837679375,
+      "lr": 0.0003520365877844011,
+      "time_sec": 141.13
+    },
+    {
+      "epoch": 4,
+      "stage": "A",
+      "train_loss": 0.8565036430855459,
+      "train_acc": 0.7364819759679573,
+      "val_loss": 0.8829415488243103,
+      "val_acc": 0.7225,
+      "val_f1": 0.7169711500761002,
+      "lr": 0.00010453658778440106,
+      "time_sec": 137.78
+    },
+    {
+      "epoch": 5,
+      "stage": "A",
+      "train_loss": 0.83481888427276,
+      "train_acc": 0.7510013351134847,
+      "val_loss": 0.8752956199645996,
+      "val_acc": 0.7308333333333333,
+      "val_f1": 0.7261890067900696,
+      "lr": 1e-05,
+      "time_sec": 140.54
+    },
+    {
+      "epoch": 6,
+      "stage": "B",
+      "train_loss": 0.8150025170062667,
+      "train_acc": 0.7643524699599465,
+      "val_loss": 0.9069712487856547,
+      "val_acc": 0.7341666666666666,
+      "val_f1": 0.7272043053519511,
+      "lr": 2.5132978723404255e-05,
+      "time_sec": 137.64
+    },
+    {
+      "epoch": 7,
+      "stage": "B",
+      "train_loss": 0.7568952406200771,
+      "train_acc": 0.7878838451268357,
+      "val_loss": 0.7247093423207601,
+      "val_acc": 0.8116666666666666,
+      "val_f1": 0.8125725860670557,
+      "lr": 5e-05,
+      "time_sec": 139.33
+    },
+    {
+      "epoch": 8,
+      "stage": "B",
+      "train_loss": 0.697948483862132,
+      "train_acc": 0.8239319092122831,
+      "val_loss": 0.7889582467079163,
+      "val_acc": 0.795,
+      "val_f1": 0.7929243571282718,
+      "lr": 4.928080998129479e-05,
+      "time_sec": 136.56
+    },
+    {
+      "epoch": 9,
+      "stage": "B",
+      "train_loss": 0.651922370308391,
+      "train_acc": 0.8484646194926568,
+      "val_loss": 0.753125749429067,
+      "val_acc": 0.7925,
+      "val_f1": 0.7876888795469529,
+      "lr": 4.716503663491694e-05,
+      "time_sec": 135.16
+    },
+    {
+      "epoch": 10,
+      "stage": "B",
+      "train_loss": 0.6057849249470536,
+      "train_acc": 0.8724966622162884,
+      "val_loss": 0.8407134334246318,
+      "val_acc": 0.77,
+      "val_f1": 0.7731540673366888,
+      "lr": 4.3775641017234756e-05,
+      "time_sec": 134.36
+    },
+    {
+      "epoch": 11,
+      "stage": "B",
+      "train_loss": 0.5856430072969047,
+      "train_acc": 0.8756675567423231,
+      "val_loss": 0.6977415498097738,
+      "val_acc": 0.8316666666666667,
+      "val_f1": 0.8331194285805515,
+      "lr": 3.9309602481596106e-05,
+      "time_sec": 136.78
+    },
+    {
+      "epoch": 12,
+      "stage": "B",
+      "train_loss": 0.5407694259854916,
+      "train_acc": 0.9025367156208278,
+      "val_loss": 0.727245573202769,
+      "val_acc": 0.8275,
+      "val_f1": 0.8283645136816462,
+      "lr": 3.402647095430276e-05,
+      "time_sec": 135.52
+    },
+    {
+      "epoch": 13,
+      "stage": "B",
+      "train_loss": 0.511101077411458,
+      "train_acc": 0.9213951935914553,
+      "val_loss": 0.7368911306063334,
+      "val_acc": 0.8275,
+      "val_f1": 0.8285524951811436,
+      "lr": 2.8233282836319248e-05,
+      "time_sec": 136.19
+    },
+    {
+      "epoch": 14,
+      "stage": "B",
+      "train_loss": 0.474648093031309,
+      "train_acc": 0.9382510013351135,
+      "val_loss": 0.7375792368253072,
+      "val_acc": 0.8458333333333333,
+      "val_f1": 0.8469566945845309,
+      "lr": 2.226671716368076e-05,
+      "time_sec": 134.94
+    },
+    {
+      "epoch": 15,
+      "stage": "B",
+      "train_loss": 0.45479274213871107,
+      "train_acc": 0.9495994659546061,
+      "val_loss": 0.7418281133969625,
+      "val_acc": 0.83,
+      "val_f1": 0.8298627122759336,
+      "lr": 1.647352904569724e-05,
+      "time_sec": 134.93
+    },
+    {
+      "epoch": 16,
+      "stage": "B",
+      "train_loss": 0.42318460078678716,
+      "train_acc": 0.9642857142857143,
+      "val_loss": 0.7314490024248759,
+      "val_acc": 0.84,
+      "val_f1": 0.8408523336621597,
+      "lr": 1.1190397518403897e-05,
+      "time_sec": 135.98
+    },
+    {
+      "epoch": 17,
+      "stage": "B",
+      "train_loss": 0.4086032458077445,
+      "train_acc": 0.970460614152203,
+      "val_loss": 0.7720976281166076,
+      "val_acc": 0.8341666666666666,
+      "val_f1": 0.8351207451074782,
+      "lr": 6.724358982765246e-06,
+      "time_sec": 138.66
+    },
+    {
+      "epoch": 18,
+      "stage": "B",
+      "train_loss": 0.3945215969521786,
+      "train_acc": 0.9796395193591455,
+      "val_loss": 0.7434449958801269,
+      "val_acc": 0.8383333333333334,
+      "val_f1": 0.8388556919713221,
+      "lr": 3.3349633650830573e-06,
+      "time_sec": 136.88
+    },
+    {
+      "epoch": 19,
+      "stage": "B",
+      "train_loss": 0.3896164227630172,
+      "train_acc": 0.9826435246995995,
+      "val_loss": 0.7559239053726197,
+      "val_acc": 0.8325,
+      "val_f1": 0.8330217733059482,
+      "lr": 1.2191900187052126e-06,
+      "time_sec": 138.4
+    }
+  ],
+  "stage_a_best": {
+    "stage": "A",
+    "epoch": 5,
+    "val_loss": 0.8752956199645996,
+    "val_accuracy": 0.7308333333333333,
+    "val_f1": 0.7261890067900696
+  },
+  "stage_b_best": {
+    "stage": "B",
+    "epoch": 9,
+    "val_loss": 0.7375792368253072,
+    "val_accuracy": 0.8458333333333333,
+    "val_f1": 0.8469566945845309
+  },
+  "eval": {
+    "val_loss": 0.5234148152669271,
+    "val_accuracy": 0.8458333333333333,
+    "val_macro_f1": 0.8469566945845309,
+    "n_val": 1200,
+    "cm": [
+      [
+        246,
+        0,
+        21,
+        33
+      ],
+      [
+        5,
+        281,
+        9,
+        5
+      ],
+      [
+        39,
+        4,
+        235,
+        22
+      ],
+      [
+        36,
+        1,
+        10,
+        253
+      ]
+    ]
+  },
+  "eval_report": "              precision    recall  f1-score   support\n\n       anger     0.7546    0.8200    0.7859       300\n       happy     0.9825    0.9367    0.9590       300\n       panic     0.8545    0.7833    0.8174       300\n     sadness     0.8083    0.8433    0.8254       300\n\n    accuracy                         0.8458      1200\n   macro avg     0.8500    0.8458    0.8470      1200\nweighted avg     0.8500    0.8458    0.8470      1200\n",
+  "timing_sec": {
+    "total_sec": 2746.5
+  },
+  "model_path": "/workspace/user4/emotion-project/models/exp05_vit_b16_two_stage.pt",
+  "created_at": "2026-04-17T09:49:54"
+}

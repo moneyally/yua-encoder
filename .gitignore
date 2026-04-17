@@ -1,0 +1,105 @@
+# ============================================================
+# 데이터 (대용량, 저작권, 재생성 가능)
+# ============================================================
+data/
+data_rot/
+data_rot_crop*/
+zips/
+
+# ============================================================
+# 백업 아카이브
+# ============================================================
+backups/
+
+# ============================================================
+# Python / notebook cache
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+
+# ============================================================
+# 모델 스윕/스모크 (최종 제출물 아님)
+# ============================================================
+logs/sweep/
+models/smoke_*
+models/phase0_*
+results/ensemble_cache/
+results/ensemble_cache_mtcnn/
+
+# ============================================================
+# 모델 가중치 — github 100MB 제한. Releases 로 분리 업로드.
+# ensemble_*.json config 는 유지.
+# ============================================================
+models/*.h5
+models/*.pt
+!models/ensemble_*.json
+
+# ============================================================
+# 학습 로그 — csv / meta.json 만 남기고 stdout 덤프 제외
+# ============================================================
+logs/*.stdout
+logs/*.out
+logs/*.log
+logs/*.lock
+logs/*_url*
+logs/gdown*
+logs/normalize.log
+logs/cloudflared*
+logs/cf_tunnel*
+logs/smoke_*
+logs/phase0_*
+results/phase0_*
+results/smoke_*
+models/ensemble_best3.json
+
+# ============================================================
+# 인프라 스크립트 (터널/백업/데이터수령 — 로컬 환경 전용)
+# ============================================================
+scripts/cf_tunnel_*.sh
+scripts/tunnel_*.sh
+scripts/commit_and_backup.sh
+scripts/backup_project.sh
+scripts/gdown_retry.sh
+scripts/wait_and_validate.sh
+scripts/unzip_and_validate.sh
+
+# ============================================================
+# 내부 협업 문서 / 에이전트 지시문 (github 공개 제외)
+# ============================================================
+CLAUDE.md
+CLAUDE_INSTRUCTIONS.md
+RUNPOD_GUIDE.md
+2026-*.md
+conda_env_freeze.txt
+
+# ============================================================
+# 과제 원본 PDF / 실습 참고 (저작권)
+# ============================================================
+AI개발.비정형_project*.pdf
+AI_FinalProject_emotion_classification_*.ipynb
+7.08.Vision_Transformer.pdf
+7.08.Vit.Example.ipynb
+
+# ============================================================
+# IDE / editor / personal
+# ============================================================
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# temporary / env
+# ============================================================
+*.tmp
+*.swp
+*~
+.env
+.venv/
+venv/

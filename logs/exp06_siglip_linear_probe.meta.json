@@ -1,0 +1,207 @@
+{
+  "name": "exp06_siglip_linear_probe",
+  "args": {
+    "name": "exp06_siglip_linear_probe",
+    "siglip_name": "google/siglip-base-patch16-384",
+    "data": "/workspace/user4/emotion-project/data_rot",
+    "epochs": 15,
+    "batch_size": 32,
+    "img_size": 384,
+    "lr": 0.001,
+    "lr_backbone": 5e-05,
+    "dropout": 0.1,
+    "crop": true,
+    "augment": true,
+    "patience": 5,
+    "note": "E6 SigLIP linear probe (yua-encoder wrapper) + fill=128 + class_weight=auto + SSOT + worker_init",
+    "seed": 42,
+    "label_smoothing": 0.1,
+    "weight_decay": 0.0001,
+    "warmup_epochs": 2,
+    "monitor": "val_accuracy",
+    "deterministic": false,
+    "aug_rotation_fill": 128,
+    "class_weight": "auto",
+    "two_stage": false,
+    "stage_a_epochs": 0,
+    "stage_a_warmup": 0,
+    "unfreeze_encoder": false,
+    "num_workers": 4,
+    "amp": "bf16",
+    "limit_train_samples": 0,
+    "limit_val_samples": 0,
+    "aug_rot_deg": 10.0,
+    "aug_hflip_prob": 0.5,
+    "aug_jitter_bright": 0.2,
+    "aug_jitter_contrast": 0.2,
+    "aug_jitter_saturation": 0.1,
+    "aug_jitter_hue": 0.05,
+    "min_lr_ratio": 0.01,
+    "grad_clip_norm": 1.0,
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "adam_eps": 1e-08,
+    "projection_dim": 2048,
+    "pixel_shuffle_ratio": 4,
+    "use_pixel_shuffle": true
+  },
+  "epochs_run": 10,
+  "history": [
+    {
+      "epoch": 1,
+      "stage": "B",
+      "train_loss": 0.8717994987566735,
+      "train_acc": 0.7086114819759679,
+      "val_loss": 0.8616973861058553,
+      "val_acc": 0.7341666666666666,
+      "val_f1": 0.7397400782280802,
+      "lr": 0.0005026595744680851,
+      "time_sec": 254.05
+    },
+    {
+      "epoch": 2,
+      "stage": "B",
+      "train_loss": 0.75219674048341,
+      "train_acc": 0.8015687583444593,
+      "val_loss": 0.802380518913269,
+      "val_acc": 0.77,
+      "val_f1": 0.7737602023482237,
+      "lr": 0.001,
+      "time_sec": 257.23
+    },
+    {
+      "epoch": 3,
+      "stage": "B",
+      "train_loss": 0.7010104988859556,
+      "train_acc": 0.8304405874499332,
+      "val_loss": 0.8036699136098225,
+      "val_acc": 0.7708333333333334,
+      "val_f1": 0.7703500329151439,
+      "lr": 0.0009856161996258958,
+      "time_sec": 255.05
+    },
+    {
+      "epoch": 4,
+      "stage": "B",
+      "train_loss": 0.6503551045310831,
+      "train_acc": 0.8586448598130841,
+      "val_loss": 0.8104548708597819,
+      "val_acc": 0.765,
+      "val_f1": 0.7700396609946721,
+      "lr": 0.0009433007326983388,
+      "time_sec": 239.9
+    },
+    {
+      "epoch": 5,
+      "stage": "B",
+      "train_loss": 0.6190637146360247,
+      "train_acc": 0.8775033377837116,
+      "val_loss": 0.7337782939275106,
+      "val_acc": 0.8191666666666667,
+      "val_f1": 0.8182771089546522,
+      "lr": 0.000875512820344695,
+      "time_sec": 246.77
+    },
+    {
+      "epoch": 6,
+      "stage": "B",
+      "train_loss": 0.5846720598090952,
+      "train_acc": 0.8921895861148198,
+      "val_loss": 0.7758240922292073,
+      "val_acc": 0.8008333333333333,
+      "val_f1": 0.8017894246995715,
+      "lr": 0.0007861920496319221,
+      "time_sec": 249.47
+    },
+    {
+      "epoch": 7,
+      "stage": "B",
+      "train_loss": 0.5618969279233222,
+      "train_acc": 0.9062082777036048,
+      "val_loss": 0.7383903821309408,
+      "val_acc": 0.8166666666666667,
+      "val_f1": 0.8158417502198405,
+      "lr": 0.0006805294190860552,
+      "time_sec": 247.02
+    },
+    {
+      "epoch": 8,
+      "stage": "B",
+      "train_loss": 0.5307108902724308,
+      "train_acc": 0.9284045393858478,
+      "val_loss": 0.8211006728808085,
+      "val_acc": 0.7983333333333333,
+      "val_f1": 0.7961684069815917,
+      "lr": 0.000564665656726385,
+      "time_sec": 242.0
+    },
+    {
+      "epoch": 9,
+      "stage": "B",
+      "train_loss": 0.5152073676022733,
+      "train_acc": 0.9384178905206942,
+      "val_loss": 0.7600205747286478,
+      "val_acc": 0.8133333333333334,
+      "val_f1": 0.8110329779619838,
+      "lr": 0.0004453343432736152,
+      "time_sec": 241.97
+    },
+    {
+      "epoch": 10,
+      "stage": "B",
+      "train_loss": 0.4864638692068958,
+      "train_acc": 0.9527703604806409,
+      "val_loss": 0.8175924849510193,
+      "val_acc": 0.805,
+      "val_f1": 0.8051107387858569,
+      "lr": 0.0003294705809139448,
+      "time_sec": 247.07
+    }
+  ],
+  "stage_a_best": null,
+  "stage_b_best": {
+    "stage": "B",
+    "epoch": 5,
+    "val_loss": 0.7337782939275106,
+    "val_accuracy": 0.8191666666666667,
+    "val_f1": 0.8182771089546522
+  },
+  "eval": {
+    "val_loss": 0.507750064531962,
+    "val_accuracy": 0.8191666666666667,
+    "val_macro_f1": 0.8182771089546522,
+    "n_val": 1200,
+    "cm": [
+      [
+        220,
+        13,
+        32,
+        35
+      ],
+      [
+        4,
+        287,
+        7,
+        2
+      ],
+      [
+        42,
+        8,
+        232,
+        18
+      ],
+      [
+        30,
+        5,
+        21,
+        244
+      ]
+    ]
+  },
+  "eval_report": "              precision    recall  f1-score   support\n\n       anger     0.7432    0.7333    0.7383       300\n       happy     0.9169    0.9567    0.9364       300\n       panic     0.7945    0.7733    0.7838       300\n     sadness     0.8161    0.8133    0.8147       300\n\n    accuracy                         0.8192      1200\n   macro avg     0.8177    0.8192    0.8183      1200\nweighted avg     0.8177    0.8192    0.8183      1200\n",
+  "timing_sec": {
+    "total_sec": 2569.8
+  },
+  "model_path": "/workspace/user4/emotion-project/models/exp06_siglip_linear_probe.pt",
+  "created_at": "2026-04-17T11:15:03"
+}
