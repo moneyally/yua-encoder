@@ -13,11 +13,26 @@ set -euo pipefail
 
 PROJECT="${EMOTION_PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cd "$PROJECT"
-# conda env 확인
-if ! command -v python >/dev/null 2>&1; then
-    echo "[FAIL] python 없음 — conda activate user4_env 먼저" >&2
-    exit 1
+
+# conda env 자동 활성화 (nohup 으로 띄워도 동작)
+CONDA_ENV="${CONDA_ENV:-user4_env}"
+CONDA_BASE="${CONDA_BASE:-/home/user4/miniconda3}"
+if [ -z "${CONDA_DEFAULT_ENV:-}" ] || [ "$CONDA_DEFAULT_ENV" != "$CONDA_ENV" ]; then
+    if [ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]; then
+        # shellcheck disable=SC1091
+        source "$CONDA_BASE/etc/profile.d/conda.sh"
+        conda activate "$CONDA_ENV" || {
+            echo "[FAIL] conda activate $CONDA_ENV 실패" >&2; exit 1;
+        }
+    fi
 fi
+# python + 핵심 패키지 sanity check (제1헌법: FAIL 시 즉시 중단)
+python -c "import torch, tensorflow" 2>/dev/null || {
+    echo "[FAIL] torch/tensorflow import 불가 — conda env=$CONDA_ENV 확인" >&2
+    python --version >&2 || true
+    exit 1
+}
+echo "[env] conda=${CONDA_DEFAULT_ENV:-none}  python=$(which python)"
 
 MODE="${1:-FULL}"
 if [[ "$MODE" != "SMOKE" && "$MODE" != "FULL" ]]; then
@@ -48,12 +63,16 @@ done
 
 SMOKE_LIMIT=""
 KD_EPOCHS=5
-KD_NUM_WORKERS=8
+# CPU 96코어 / GPU 45GB 여유 → 워커 20, prefetch 4, bs 48 으로 GPU util 극대화
+KD_NUM_WORKERS="${KD_NUM_WORKERS:-20}"
+KD_PREFETCH="${KD_PREFETCH:-4}"
+KD_BATCH_SIZE="${KD_BATCH_SIZE:-48}"
 if [[ "$MODE" == "SMOKE" ]]; then
-    SMOKE_LIMIT="--limit-samples 128"
+    SMOKE_LIMIT="--limit-samples 512"
     KD_EPOCHS=1
-    KD_NUM_WORKERS=4
-    echo "[SMOKE] limit-samples=128, epochs=1"
+    KD_NUM_WORKERS=8
+    KD_BATCH_SIZE=32
+    echo "[SMOKE] stratified 512 samples, epochs=1"
 fi
 
 run_step() {
@@ -71,16 +90,28 @@ run_step() {
 echo ""
 echo "============ Stage 1: Teacher soft ============"
 
+# BATCH 버전 사용 (제4헌법: sequential → 10x+ 가속)
+TEACHER_SCRIPT="scripts/gen_teacher_soft_batch.py"
+TEACHER_BATCH_ARGS=(
+    --loader-batch-size "${TEACHER_LOADER_BS:-64}"
+    --num-workers       "${TEACHER_WORKERS:-16}"
+    --prefetch-factor   "${TEACHER_PREFETCH:-4}"
+    --tf-batch          "${TF_BATCH:-32}"
+    --vit-batch         "${VIT_BATCH:-64}"
+    --siglip-batch      "${SIGLIP_BATCH:-16}"
+)
+
 # 1-a: TS off (baseline)
 if [[ ! -f "$TEACHER_DIR/train_teacher_tsoff.npz" ]]; then
     run_step "teacher_soft_tsoff" \
-        python scripts/gen_teacher_soft.py \
+        python "$TEACHER_SCRIPT" \
             --ensemble-json "$TEACHER_ENSEMBLE" \
             --data-root "$DATA_ROOT" \
             --split train \
             --crop \
             --min-conf 0.0 \
             --out "$TEACHER_DIR/train_teacher_tsoff.npz" \
+            "${TEACHER_BATCH_ARGS[@]}" \
             $SMOKE_LIMIT
 else
     echo "  [skip] teacher_soft_tsoff 이미 존재"
@@ -89,7 +120,7 @@ fi
 # 1-b: TS on (val에서 T* 학습 후 적용)
 if [[ ! -f "$TEACHER_DIR/train_teacher_tson.npz" ]]; then
     run_step "teacher_soft_tson" \
-        python scripts/gen_teacher_soft.py \
+        python "$TEACHER_SCRIPT" \
             --ensemble-json "$TEACHER_ENSEMBLE" \
             --data-root "$DATA_ROOT" \
             --split train \
@@ -97,6 +128,7 @@ if [[ ! -f "$TEACHER_DIR/train_teacher_tson.npz" ]]; then
             --apply-ts \
             --min-conf 0.0 \
             --out "$TEACHER_DIR/train_teacher_tson.npz" \
+            "${TEACHER_BATCH_ARGS[@]}" \
             $SMOKE_LIMIT
 else
     echo "  [skip] teacher_soft_tson 이미 존재"
@@ -112,8 +144,9 @@ COMMON=(
     --data-root "$DATA_ROOT"
     --epochs "$KD_EPOCHS"
     --patience 3
-    --batch-size 32
+    --batch-size "$KD_BATCH_SIZE"
     --num-workers "$KD_NUM_WORKERS"
+    --prefetch-factor "$KD_PREFETCH"
     --amp bf16
     --seed 42
     --crop --augment

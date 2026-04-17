@@ -38,17 +38,29 @@ pipeline_tag: image-classification
 bash scripts/restore_env.sh user4_env
 conda activate user4_env
 
-# 1) 단일 이미지 추론 — 앙상블 + 자동 얼굴 검출 + TTA
+# 1) 단일 이미지 추론 — 단일 모델 (최고 단일: ViT-B/16, val 0.8458)
+python predict.py \
+    --model models/exp05_vit_b16_two_stage.pt \
+    --image path/to/face.jpg
+
+# 2) 여러 장 한 번에 (3~6장 배치)
+python predict.py \
+    --model models/exp05_vit_b16_two_stage.pt \
+    --images face_a.jpg face_b.jpg face_c.jpg
+
+# 3) 디렉터리 전체 추론 (하위의 .jpg/.png 전부)
+python predict.py \
+    --model models/exp05_vit_b16_two_stage.pt \
+    --image-dir path/to/faces/
+
+# 4) 앙상블 + 자동 얼굴 검출 + TTA (advanced)
 python predict.py \
     --model models/ensemble_mtcnn.json \
     --image path/to/face.jpg \
     --tta --tta-crops 5crop --tta-scales 224,256
-
-# 2) 단일 모델만 쓰고 싶을 때 (최고 단일: ViT-B/16)
-python predict.py \
-    --model models/exp05_vit_b16_two_stage.pt \
-    --image path/to/face.jpg
 ```
+
+입력 방식 3가지 중 하나 선택: `--image` (단일) / `--images` (여러 장, 공백 구분) / `--image-dir` (디렉터리). 여러 장이면 JSON 한 줄씩 (ndjson) 으로 출력.
 
 CLI 출력 예시:
 
@@ -88,20 +100,30 @@ print('smoke test PASS')
 ## Python API
 
 ```python
-from predict import load_model, predict
+from predict import load_model, predict, predict_batch
 
-# 앙상블 config (JSON) 로드. MTCNN 자동 얼굴 검출 + TTA 포함
+# 단일 모델 로드 (메인 제출 경로)
 model = load_model(
-    "models/ensemble_mtcnn.json",
-    auto_face_crop=True,           # bbox 없는 입력도 자동으로 얼굴만 잘라 추론
-    tta=True,
-    tta_crops="5crop",             # 5-crop (center + 4 corners)
-    tta_scales=[224, 256],         # multi-scale
-    tta_hflip=True,                # horizontal flip
+    "models/exp05_vit_b16_two_stage.pt",
+    auto_face_crop=True,           # 얼굴 자동 검출 (MTCNN)
 )
 
-label, confidence = predict(model, "path/to/face.jpg")
-print(f"{label}: {confidence:.3f}")
+# (a) 단일 이미지
+label, conf = predict(model, "path/to/face.jpg")
+print(f"{label}: {conf:.3f}")
+
+# (b) 여러 장 (3~6장 배치). PIL / str / Path 섞여도 OK
+results = predict_batch(model, ["a.jpg", "b.jpg", "c.jpg", "d.jpg"])
+for path, (lbl, conf) in zip(["a.jpg", "b.jpg", "c.jpg", "d.jpg"], results):
+    print(f"{path}: {lbl} ({conf:.3f})")
+
+# (c) 확률 벡터만 필요할 때
+from predict import predict_probs_batch
+probs_matrix = predict_probs_batch(model, ["a.jpg", "b.jpg"])   # shape (2, 4)
+
+# 앙상블 config (advanced) — 동일 API
+ens = load_model("models/ensemble_mtcnn.json",
+                 tta=True, tta_crops="5crop", tta_scales=[224, 256])
 ```
 
 ### Jupyter / Colab 노트북 사용

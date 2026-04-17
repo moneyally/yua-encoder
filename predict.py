@@ -1324,6 +1324,62 @@ def predict(model_obj: dict, image: ImageLike, tta: Optional[bool] = None) -> tu
 
 
 # ==========================================================================
+# Batch API — 여러 장 한 번에 처리 (튜터/외부 평가자가 3~6장 보내는 경우 대비)
+# ==========================================================================
+
+def predict_probs_batch(model_obj: dict,
+                        images: list,
+                        tta: Optional[bool] = None) -> np.ndarray:
+    """여러 장 → probabilities (N, NUM_CLASSES).
+
+    images: list[str | Path | PIL.Image]
+    내부적으로 predict_probs 순차 호출 (단일 이미지 predict_fn 래핑).
+    앙상블 / TTA / face crop 전부 그대로 전파.
+
+    Returns: np.ndarray shape (N, 4), sum=1 각 row.
+    Raises:
+      TypeError — images 가 list 아니거나 비어있음
+      RuntimeError — 개별 predict 실패 시 즉시 중단 (제1헌법)
+    """
+    if not isinstance(images, (list, tuple)):
+        raise TypeError(
+            f"images must be list/tuple, got {type(images).__name__}"
+        )
+    if len(images) == 0:
+        raise ValueError("images 가 비어있음")
+    probs_list = []
+    for i, img in enumerate(images):
+        p = predict_probs(model_obj, img, tta=tta)
+        probs_list.append(p)
+    probs = np.stack(probs_list, axis=0).astype(np.float32)
+    if probs.shape != (len(images), NUM_CLASSES):
+        raise RuntimeError(
+            f"batch predict shape mismatch: {probs.shape} "
+            f"(expected ({len(images)},{NUM_CLASSES}))"
+        )
+    return probs
+
+
+def predict_batch(model_obj: dict,
+                  images: list,
+                  tta: Optional[bool] = None) -> list[tuple[str, float]]:
+    """여러 장 → list[(label, confidence)].
+
+    사용 예)
+        model = load_model("models/exp05_vit_b16_two_stage.pt")
+        results = predict_batch(model, ["a.jpg", "b.jpg", "c.jpg"])
+        for (lbl, conf), path in zip(results, paths):
+            print(f"{path}: {lbl} ({conf:.3f})")
+    """
+    probs = predict_probs_batch(model_obj, images, tta=tta)
+    out = []
+    for row in probs:
+        idx = int(np.argmax(row))
+        out.append((CLASSES[idx], float(row[idx])))
+    return out
+
+
+# ==========================================================================
 # CLI
 # ==========================================================================
 
@@ -1333,7 +1389,13 @@ def _cli():
     )
     ap.add_argument("--model", required=True,
                     help="모델 경로: .h5 (TF) / .pt (torch ViT/SigLIP) / .json (앙상블)")
-    ap.add_argument("--image", required=True, help="입력 이미지 경로 (JPEG/PNG 등)")
+    # 이미지 입력 — 3 모드 중 하나 (mutually exclusive)
+    img_group = ap.add_mutually_exclusive_group(required=True)
+    img_group.add_argument("--image", help="단일 이미지 경로")
+    img_group.add_argument("--images", nargs="+",
+                           help="여러 이미지 경로 (공백 구분). 예: --images a.jpg b.jpg c.jpg")
+    img_group.add_argument("--image-dir",
+                           help="디렉터리 — 하위의 .jpg/.jpeg/.png 전부 추론")
     ap.add_argument("--device", default="auto", choices=["auto", "cpu"],
                     help="torch 쪽만 영향. 기본 'auto'.")
     ap.add_argument("--verbose", "-v", action="store_true",
@@ -1388,19 +1450,47 @@ def _cli():
         print(f"[i] type={model_obj['type']}  meta={model_obj.get('meta')}",
               file=sys.stderr)
 
-    probs = predict_probs(model_obj, args.image)
-    idx = int(np.argmax(probs))
-    label = CLASSES[idx]
-    conf = float(probs[idx])
+    # 이미지 목록 수집 (단일 / 여러 / 디렉터리)
+    image_exts = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+    if args.image:
+        image_paths = [args.image]
+    elif args.images:
+        image_paths = list(args.images)
+    else:  # args.image_dir
+        d = Path(args.image_dir)
+        if not d.is_dir():
+            ap.error(f"--image-dir 디렉터리 아님: {d}")
+        image_paths = sorted(
+            str(p) for p in d.rglob("*")
+            if p.is_file() and p.suffix.lower() in image_exts
+        )
+        if not image_paths:
+            ap.error(f"--image-dir 에 이미지 없음: {d}")
 
-    out = {
-        "label": label,
-        "confidence": round(conf, 6),
-        "probs": {c: round(float(p), 6) for c, p in zip(CLASSES, probs)},
-        "model_type": model_obj["type"],
-    }
-    # stdout 은 JSON 한 줄 — 파이프라인/테스트에서 파싱 편의
-    print(json.dumps(out, ensure_ascii=False))
+    if len(image_paths) == 1:
+        # 단일 — 기존 출력 포맷 유지 (backward compatible)
+        probs = predict_probs(model_obj, image_paths[0])
+        idx = int(np.argmax(probs))
+        out = {
+            "label": CLASSES[idx],
+            "confidence": round(float(probs[idx]), 6),
+            "probs": {c: round(float(p), 6) for c, p in zip(CLASSES, probs)},
+            "model_type": model_obj["type"],
+        }
+        print(json.dumps(out, ensure_ascii=False))
+    else:
+        # 여러 장 — JSON list (한 줄씩 ndjson)
+        probs_mat = predict_probs_batch(model_obj, image_paths)
+        for path, probs in zip(image_paths, probs_mat):
+            idx = int(np.argmax(probs))
+            out = {
+                "image": path,
+                "label": CLASSES[idx],
+                "confidence": round(float(probs[idx]), 6),
+                "probs": {c: round(float(p), 6) for c, p in zip(CLASSES, probs)},
+                "model_type": model_obj["type"],
+            }
+            print(json.dumps(out, ensure_ascii=False))
 
 
 if __name__ == "__main__":
