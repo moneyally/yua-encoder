@@ -1072,32 +1072,33 @@ def _load_ensemble(cfg_path: Path,
         if not model_path.is_file():
             raise FileNotFoundError(f"ensemble member {i} 파일 없음: {model_path}")
         weight = float(m.get("weight", 1.0))
-        # 각 sub-member 가 자체 TTA + face crop 처리 (ensemble 레벨에서 중복 wrap 안 함)
-        # multi-TTA 파라미터는 모든 sub 에 동일하게 전파 (각 모델 view 수 동일 가정).
+        # MTCNN + TTA 는 ensemble 레벨에서 1회만 수행. sub 는 raw core (crop/tta off) 로 load.
+        # 같은 cropped PIL 을 모든 sub 가 공유 → MTCNN N회 중복 제거.
         sub = _load_single(
             model_path,
             force_cpu=force_cpu,
-            tta=tta,
-            auto_face_crop=auto_face_crop,
+            tta=False,
+            auto_face_crop=False,
             face_crop_margin=face_crop_margin,
             face_crop_min_size=face_crop_min_size,
-            tta_crops=tta_crops,
-            tta_scales=tta_scales,
-            tta_hflip=tta_hflip,
+            tta_crops="none",
+            tta_scales=None,
+            tta_hflip=False,
         )
         sub["_weight"] = weight
         loaded.append(sub)
         print(
             f"[ensemble] [{i}] loaded {model_path.name}  type={sub['type']}  "
-            f"w={weight}  tta={tta}  crop={auto_face_crop}",
+            f"w={weight}  (sub tta/crop OFF — ensemble 에서 1회 공유)",
             file=sys.stderr,
         )
 
-    def predict_fn(pil: Image.Image) -> np.ndarray:
+    def predict_fn_core(pil: Image.Image) -> np.ndarray:
+        """ensemble weighted sum. pil 은 이미 cropped + TTA-wrapped 상태에서 들어옴."""
         agg = np.zeros(NUM_CLASSES, dtype=np.float64)
         total_w = 0.0
         for sub in loaded:
-            probs = sub["predict_fn"](pil)
+            probs = sub["predict_fn_raw"](pil)
             probs = np.asarray(probs, dtype=np.float64).reshape(-1)
             if probs.shape[0] != NUM_CLASSES:
                 raise RuntimeError(
@@ -1117,10 +1118,36 @@ def _load_ensemble(cfg_path: Path,
             agg = _softmax_np(agg.astype(np.float32))
         return agg.astype(np.float32)
 
+    # ensemble 레벨 공통 wrap: face crop 1회 → TTA 1회
+    # force_cpu=True 면 무조건 CPU. 아니면 torch sub 중 GPU 쓰는 게 있으면 GPU, 없으면 CPU.
+    if force_cpu:
+        mtcnn_device = "cpu"
+    else:
+        mtcnn_device = "cpu"
+        for sub in loaded:
+            dev = sub.get("_device")
+            if dev is not None and getattr(dev, "type", None) == "cuda":
+                mtcnn_device = "cuda"
+                break
+
+    predict_fn_base = predict_fn_core
+    if auto_face_crop:
+        predict_fn_base = _wrap_face_crop(
+            predict_fn_core,
+            margin=face_crop_margin,
+            min_face_size=face_crop_min_size,
+            device=mtcnn_device,
+        )
+    if tta:
+        factory = _select_tta_wrapper(tta_crops, tta_scales, tta_hflip)
+        predict_fn_public = factory(predict_fn_base) if factory else predict_fn_base
+    else:
+        predict_fn_public = predict_fn_base
+
     return {
-        "predict_fn": predict_fn,
-        "predict_fn_base": predict_fn,   # ensemble 은 이미 sub 레벨에서 TTA/crop 반영됨
-        "predict_fn_raw": predict_fn,    # ensemble 은 sub 기준, 별도 raw 없음
+        "predict_fn": predict_fn_public,
+        "predict_fn_base": predict_fn_base,   # TTA 없이 (crop 만) — predict() override 용
+        "predict_fn_raw": predict_fn_core,    # crop/tta 전부 없는 원본 (debug)
         "tta": bool(tta),
         "auto_face_crop": bool(auto_face_crop),
         "type": f"ensemble(n={len(loaded)})"

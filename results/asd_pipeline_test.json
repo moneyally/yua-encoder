@@ -1,0 +1,301 @@
+{
+  "n_samples": 20,
+  "thresholds": {
+    "accept_conf": 0.85,
+    "retry_conf": 0.6
+  },
+  "decisions": {
+    "ACCEPT": 18,
+    "RETRY": 0,
+    "DROP": 2
+  },
+  "accuracy": 1.0,
+  "mean_conf": 0.909,
+  "accept_mean_conf": 0.926,
+  "results": [
+    {
+      "file": "8qnea6a7774d0d66422d00f6c022b7",
+      "expected": "anger",
+      "pred": "anger",
+      "conf": 0.937,
+      "decision": "ACCEPT",
+      "scenario": "친구가 네가 아끼던 장난감을 망가뜨렸어",
+      "probs": {
+        "anger": 0.937,
+        "happy": 0.013,
+        "panic": 0.022,
+        "sadness": 0.028
+      },
+      "llm_reply": "정말 잘 했어.  \n소중한 장난감이 망가져서 화나는 게 당연해.",
+      "llm_sec": 1.04
+    },
+    {
+      "file": "27zb2d2e6b8722c9f3108ef67c2846",
+      "expected": "anger",
+      "pred": "anger",
+      "conf": 0.903,
+      "decision": "ACCEPT",
+      "scenario": "친구가 네가 아끼던 장난감을 망가뜨렸어",
+      "probs": {
+        "anger": 0.903,
+        "happy": 0.016,
+        "panic": 0.034,
+        "sadness": 0.047
+      }
+    },
+    {
+      "file": "iina898cafc743643b5a659907d5f4",
+      "expected": "anger",
+      "pred": "anger",
+      "conf": 0.926,
+      "decision": "ACCEPT",
+      "scenario": "친구가 네가 아끼던 장난감을 망가뜨렸어",
+      "probs": {
+        "anger": 0.926,
+        "happy": 0.021,
+        "panic": 0.022,
+        "sadness": 0.031
+      }
+    },
+    {
+      "file": "ghym9ee3851092fcb4e0ed0e2b15d1",
+      "expected": "anger",
+      "pred": "anger",
+      "conf": 0.948,
+      "decision": "ACCEPT",
+      "scenario": "친구가 네가 아끼던 장난감을 망가뜨렸어",
+      "probs": {
+        "anger": 0.948,
+        "happy": 0.015,
+        "panic": 0.022,
+        "sadness": 0.015
+      }
+    },
+    {
+      "file": "fdn7f6ab469cbd518c981b13ab12b8",
+      "expected": "anger",
+      "pred": "anger",
+      "conf": 0.911,
+      "decision": "ACCEPT",
+      "scenario": "친구가 네가 아끼던 장난감을 망가뜨렸어",
+      "probs": {
+        "anger": 0.911,
+        "happy": 0.013,
+        "panic": 0.03,
+        "sadness": 0.046
+      }
+    },
+    {
+      "file": "9klo090ddc07883c73a7d3837adce2",
+      "expected": "happy",
+      "pred": "happy",
+      "conf": 0.92,
+      "decision": "ACCEPT",
+      "scenario": "가족이 네가 좋아하는 선물을 준비했어",
+      "probs": {
+        "anger": 0.045,
+        "happy": 0.92,
+        "panic": 0.018,
+        "sadness": 0.017
+      }
+    },
+    {
+      "file": "6md6a2309667aa3a7815be6da63b78",
+      "expected": "happy",
+      "pred": "happy",
+      "conf": 0.94,
+      "decision": "ACCEPT",
+      "scenario": "가족이 네가 좋아하는 선물을 준비했어",
+      "probs": {
+        "anger": 0.017,
+        "happy": 0.94,
+        "panic": 0.021,
+        "sadness": 0.022
+      }
+    },
+    {
+      "file": "yaswc6fd8ac60f7077ed1df6a172ca",
+      "expected": "happy",
+      "pred": "happy",
+      "conf": 0.959,
+      "decision": "ACCEPT",
+      "scenario": "가족이 네가 좋아하는 선물을 준비했어",
+      "probs": {
+        "anger": 0.015,
+        "happy": 0.959,
+        "panic": 0.012,
+        "sadness": 0.013
+      }
+    },
+    {
+      "file": "5lnq5bbc3ee2e3d04f2ef2abefb099",
+      "expected": "happy",
+      "pred": "happy",
+      "conf": 0.934,
+      "decision": "ACCEPT",
+      "scenario": "가족이 네가 좋아하는 선물을 준비했어",
+      "probs": {
+        "anger": 0.023,
+        "happy": 0.934,
+        "panic": 0.02,
+        "sadness": 0.022
+      }
+    },
+    {
+      "file": "r60ve69aafd576afc708e517d51171",
+      "expected": "happy",
+      "pred": "happy",
+      "conf": 0.958,
+      "decision": "ACCEPT",
+      "scenario": "가족이 네가 좋아하는 선물을 준비했어",
+      "probs": {
+        "anger": 0.013,
+        "happy": 0.958,
+        "panic": 0.012,
+        "sadness": 0.017
+      }
+    },
+    {
+      "file": "2llq785f52ab7f72f21b0bebf4d6d1",
+      "expected": "panic",
+      "pred": "panic",
+      "conf": 0.902,
+      "decision": "ACCEPT",
+      "scenario": "갑자기 교실 불이 꺼지고 큰 소리가 났어",
+      "probs": {
+        "anger": 0.03,
+        "happy": 0.028,
+        "panic": 0.902,
+        "sadness": 0.041
+      }
+    },
+    {
+      "file": "2hbla26df0ce776277705000076aca",
+      "expected": "panic",
+      "pred": "panic",
+      "conf": 0.936,
+      "decision": "ACCEPT",
+      "scenario": "갑자기 교실 불이 꺼지고 큰 소리가 났어",
+      "probs": {
+        "anger": 0.027,
+        "happy": 0.014,
+        "panic": 0.936,
+        "sadness": 0.023
+      }
+    },
+    {
+      "file": "6dq726e426e48c99e92e223ae126ff",
+      "expected": "panic",
+      "pred": "panic",
+      "conf": 0.89,
+      "decision": "ACCEPT",
+      "scenario": "갑자기 교실 불이 꺼지고 큰 소리가 났어",
+      "probs": {
+        "anger": 0.084,
+        "happy": 0.018,
+        "panic": 0.89,
+        "sadness": 0.008
+      }
+    },
+    {
+      "file": "dlzg023422dfcb34cb44f3c03b6c42",
+      "expected": "panic",
+      "pred": "panic",
+      "conf": 0.944,
+      "decision": "ACCEPT",
+      "scenario": "갑자기 교실 불이 꺼지고 큰 소리가 났어",
+      "probs": {
+        "anger": 0.025,
+        "happy": 0.013,
+        "panic": 0.944,
+        "sadness": 0.019
+      }
+    },
+    {
+      "file": "f7xt648b78b2d283a1e8d72d608857",
+      "expected": "panic",
+      "pred": "panic",
+      "conf": 0.69,
+      "decision": "DROP",
+      "scenario": "갑자기 교실 불이 꺼지고 큰 소리가 났어",
+      "probs": {
+        "anger": 0.139,
+        "happy": 0.043,
+        "panic": 0.69,
+        "sadness": 0.128
+      },
+      "llm_reply": "패닉은 너무 놀라  \n몸과 마음이 막 불안한 느낌이야.  \n\n우리 같이 숨 쉬기 해 보자.  \n천천히 후 하고 내쉬자.",
+      "llm_sec": 1.81
+    },
+    {
+      "file": "uxtp7ddcd77ddac31cccb01debeb57",
+      "expected": "sadness",
+      "pred": "sadness",
+      "conf": 0.942,
+      "decision": "ACCEPT",
+      "scenario": "친한 친구가 다른 동네로 이사 간대",
+      "probs": {
+        "anger": 0.034,
+        "happy": 0.011,
+        "panic": 0.013,
+        "sadness": 0.942
+      }
+    },
+    {
+      "file": "2bnab446cec7609e571b3995f84ec8",
+      "expected": "sadness",
+      "pred": "sadness",
+      "conf": 0.896,
+      "decision": "ACCEPT",
+      "scenario": "친한 친구가 다른 동네로 이사 간대",
+      "probs": {
+        "anger": 0.043,
+        "happy": 0.035,
+        "panic": 0.026,
+        "sadness": 0.896
+      }
+    },
+    {
+      "file": "yjcm77150060334c0acc65e75c23ce",
+      "expected": "sadness",
+      "pred": "sadness",
+      "conf": 0.826,
+      "decision": "DROP",
+      "scenario": "친한 친구가 다른 동네로 이사 간대",
+      "probs": {
+        "anger": 0.134,
+        "happy": 0.014,
+        "panic": 0.026,
+        "sadness": 0.826
+      }
+    },
+    {
+      "file": "d6c197364492a09949693414df99f7",
+      "expected": "sadness",
+      "pred": "sadness",
+      "conf": 0.913,
+      "decision": "ACCEPT",
+      "scenario": "친한 친구가 다른 동네로 이사 간대",
+      "probs": {
+        "anger": 0.034,
+        "happy": 0.038,
+        "panic": 0.015,
+        "sadness": 0.913
+      }
+    },
+    {
+      "file": "xg2d3d3d4c1a977ed60baaea388d08",
+      "expected": "sadness",
+      "pred": "sadness",
+      "conf": 0.914,
+      "decision": "ACCEPT",
+      "scenario": "친한 친구가 다른 동네로 이사 간대",
+      "probs": {
+        "anger": 0.048,
+        "happy": 0.018,
+        "panic": 0.02,
+        "sadness": 0.914
+      }
+    }
+  ]
+}

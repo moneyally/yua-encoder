@@ -1,0 +1,199 @@
+{
+  "samples": [
+    {
+      "image": "/workspace/user4/emotion-project/data_rot/img/val/anger/8qnea6a7774d0d66422d00f6c022b77e3dd273f69d78899dd7848d7fe0726ynen.jpg",
+      "gt": "anger"
+    },
+    {
+      "image": "/workspace/user4/emotion-project/data_rot/img/val/happy/1nh7e5327db42e50de8495d91912350c9f26439503b0d253106025e1eec90fofv.jpg",
+      "gt": "happy"
+    },
+    {
+      "image": "/workspace/user4/emotion-project/data_rot/img/val/panic/icbkd07462f650a5f3bb075827d032ad12865dd5ffaa43a6beaaf52a7a20aetvb.jpg",
+      "gt": "panic"
+    },
+    {
+      "image": "/workspace/user4/emotion-project/data_rot/img/val/sadness/fzd21bcf0ef28f1f7aa9afbfcf7f9411b50689cf66f4c01ac84fc85c786a5aci0.jpg",
+      "gt": "sadness"
+    }
+  ],
+  "vit": {
+    "model_name": "ViT-B/16 single",
+    "model_path": "/workspace/user4/emotion-project/models/exp05_vit_b16_two_stage.pt",
+    "load_sec": 9.68,
+    "warmup_sec": 2.24,
+    "cold_total_sec": 11.92,
+    "accuracy": 1.0,
+    "mean_model_sec": 0.42,
+    "median_model_sec": 0.42,
+    "p95_model_sec": 0.68,
+    "max_model_sec": 0.68,
+    "mean_llm_sec": 2.65,
+    "mean_total_sec": 3.07,
+    "mean_confidence": 0.926,
+    "results": [
+      {
+        "image": "8qnea6a7774d0d66422d00f6c022b77e3dd273f69d78899dd7848d7fe0726ynen.jpg",
+        "gt": "anger",
+        "pred": "anger",
+        "correct": true,
+        "confidence": 0.927,
+        "probs": {
+          "anger": 0.927,
+          "happy": 0.018,
+          "panic": 0.019,
+          "sadness": 0.037
+        },
+        "model_sec": 0.31,
+        "llm_sec": 2.77,
+        "total_sec": 3.08,
+        "story": "학교에서 친구가 빌려간 네 장난감을 망가뜨려 놓고 아무 말도 안 하고 돌아섰어. 그 모습을 본 너는 가슴이 탁 막히고 얼굴이 화끈거리면서 화가 확 치밀어 올랐어.",
+        "tokens": 200
+      },
+      {
+        "image": "1nh7e5327db42e50de8495d91912350c9f26439503b0d253106025e1eec90fofv.jpg",
+        "gt": "happy",
+        "pred": "happy",
+        "correct": true,
+        "confidence": 0.915,
+        "probs": {
+          "anger": 0.031,
+          "happy": 0.915,
+          "panic": 0.025,
+          "sadness": 0.029
+        },
+        "model_sec": 0.29,
+        "llm_sec": 3.42,
+        "total_sec": 3.71,
+        "story": "너는 아침에 눈을 떴는데 오늘은 학교에서 네가 좋아하는 체육 수업이 있는 날이라 가슴이 두근거려. 교실에 가 보니 친구들이 네가 가져온 간식을 맛있게 먹어 주겠다고 해서 괜히 기분이 더 좋아져.",
+        "tokens": 207
+      },
+      {
+        "image": "icbkd07462f650a5f3bb075827d032ad12865dd5ffaa43a6beaaf52a7a20aetvb.jpg",
+        "gt": "panic",
+        "pred": "panic",
+        "correct": true,
+        "confidence": 0.921,
+        "probs": {
+          "anger": 0.031,
+          "happy": 0.026,
+          "panic": 0.921,
+          "sadness": 0.022
+        },
+        "model_sec": 0.68,
+        "llm_sec": 1.88,
+        "total_sec": 2.56,
+        "story": "너는 학교에서 발표 순서를 기다리는데, 심장이 빨리 뛰고 손에 땀이 나서 숨이 막힐 것 같아. 사람들이 다 너만 쳐다보는 것 같아서 지금 당장 이 자리에서 도망치고 싶어져.",
+        "tokens": 199
+      },
+      {
+        "image": "fzd21bcf0ef28f1f7aa9afbfcf7f9411b50689cf66f4c01ac84fc85c786a5aci0.jpg",
+        "gt": "sadness",
+        "pred": "sadness",
+        "correct": true,
+        "confidence": 0.942,
+        "probs": {
+          "anger": 0.024,
+          "happy": 0.018,
+          "panic": 0.017,
+          "sadness": 0.942
+        },
+        "model_sec": 0.42,
+        "llm_sec": 2.51,
+        "total_sec": 2.93,
+        "story": "너는 학교에서 친구들이랑 놀고 싶었는데, 아무도 너를 불러 주지 않아서 운동장 구석에 혼자 앉아 있었어. 집에 돌아와서도 그 생각이 계속 나서, 가슴이 무겁고 눈물이 날 것 같았어.",
+        "tokens": 203
+      }
+    ]
+  },
+  "ensemble": {
+    "model_name": "Ensemble (4-model)",
+    "model_path": "/workspace/user4/emotion-project/models/ensemble_with_kd.json",
+    "load_sec": 18.83,
+    "warmup_sec": 101.71,
+    "cold_total_sec": 120.54,
+    "accuracy": 1.0,
+    "mean_model_sec": 0.62,
+    "median_model_sec": 0.67,
+    "p95_model_sec": 0.69,
+    "max_model_sec": 0.69,
+    "mean_llm_sec": 1.79,
+    "mean_total_sec": 2.4,
+    "mean_confidence": 0.949,
+    "results": [
+      {
+        "image": "8qnea6a7774d0d66422d00f6c022b77e3dd273f69d78899dd7848d7fe0726ynen.jpg",
+        "gt": "anger",
+        "pred": "anger",
+        "correct": true,
+        "confidence": 0.937,
+        "probs": {
+          "anger": 0.937,
+          "happy": 0.013,
+          "panic": 0.022,
+          "sadness": 0.028
+        },
+        "model_sec": 0.53,
+        "llm_sec": 1.9,
+        "total_sec": 2.43,
+        "story": "학교에서 친구가 줄을 새치기해서 네가 먼저 기다리고 있었는데도 앞으로 쑥 들어왔어. 너는 억울하고 화가 나서 가슴이 뜨거워지고, 친구에게 소리 지르고 싶은 느낌이 들었어.",
+        "tokens": 198
+      },
+      {
+        "image": "1nh7e5327db42e50de8495d91912350c9f26439503b0d253106025e1eec90fofv.jpg",
+        "gt": "happy",
+        "pred": "happy",
+        "correct": true,
+        "confidence": 0.949,
+        "probs": {
+          "anger": 0.017,
+          "happy": 0.949,
+          "panic": 0.017,
+          "sadness": 0.017
+        },
+        "model_sec": 0.67,
+        "llm_sec": 2.11,
+        "total_sec": 2.78,
+        "story": "너는 아침에 눈을 떴는데, 창문 밖에 맑은 햇살이 들어오고 네가 좋아하는 노래가 들려와서 가슴이 두근거려. 오늘 하루에 재미있는 일이 많이 생길 것 같아서 입가에 미소가 저절로 올라가.",
+        "tokens": 208
+      },
+      {
+        "image": "icbkd07462f650a5f3bb075827d032ad12865dd5ffaa43a6beaaf52a7a20aetvb.jpg",
+        "gt": "panic",
+        "pred": "panic",
+        "correct": true,
+        "confidence": 0.949,
+        "probs": {
+          "anger": 0.019,
+          "happy": 0.017,
+          "panic": 0.949,
+          "sadness": 0.015
+        },
+        "model_sec": 0.69,
+        "llm_sec": 1.73,
+        "total_sec": 2.42,
+        "story": "너는 학교 발표 시간에 네 차례가 다가오는데, 손에 든 종이가 자꾸 떨려서 글자가 흐릿하게 느껴져. 심장이 너무 빨리 뛰어서 숨이 잘 안 쉬어지고, 당장 이 교실에서 나가고 싶다는 생각만 머릿속을 꽉 채워.",
+        "tokens": 213
+      },
+      {
+        "image": "fzd21bcf0ef28f1f7aa9afbfcf7f9411b50689cf66f4c01ac84fc85c786a5aci0.jpg",
+        "gt": "sadness",
+        "pred": "sadness",
+        "correct": true,
+        "confidence": 0.96,
+        "probs": {
+          "anger": 0.017,
+          "happy": 0.012,
+          "panic": 0.012,
+          "sadness": 0.96
+        },
+        "model_sec": 0.58,
+        "llm_sec": 1.4,
+        "total_sec": 1.98,
+        "story": "너는 학교에서 열심히 준비한 그림 숙제를 선생님이 바빠서 제대로 보지 못하고 넘어가는 걸 본다. 집에 돌아오는 길에 가방 속 그림을 다시 꺼내 보면서, 아무도 잘 못 본 것 같아 마음이 축 처진다.",
+        "tokens": 203
+      }
+    ]
+  },
+  "prediction_agreement": "4/4"
+}

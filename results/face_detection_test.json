@@ -1,0 +1,177 @@
+{
+  "single_face": {
+    "rows": [
+      {
+        "class": "anger",
+        "file": "8qnea6a7774d0d66422d00f6c022b77e3dd273f6",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 5418.8
+      },
+      {
+        "class": "anger",
+        "file": "27zb2d2e6b8722c9f3108ef67c2846fb082a3138",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 520.6
+      },
+      {
+        "class": "anger",
+        "file": "iina898cafc743643b5a659907d5f40af7847d70",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 611.1
+      },
+      {
+        "class": "anger",
+        "file": "ghym9ee3851092fcb4e0ed0e2b15d15e50eb5b91",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 369.0
+      },
+      {
+        "class": "anger",
+        "file": "fdn7f6ab469cbd518c981b13ab12b811b867a84a",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 296.9
+      },
+      {
+        "class": "happy",
+        "file": "9klo090ddc07883c73a7d3837adce28881ee88a5",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 501.9
+      },
+      {
+        "class": "happy",
+        "file": "6md6a2309667aa3a7815be6da63b7862daba223a",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 440.1
+      },
+      {
+        "class": "happy",
+        "file": "yaswc6fd8ac60f7077ed1df6a172ca99cccc6c9d",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 285.8
+      },
+      {
+        "class": "happy",
+        "file": "5lnq5bbc3ee2e3d04f2ef2abefb09979ece95f9e",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 322.6
+      },
+      {
+        "class": "happy",
+        "file": "r60ve69aafd576afc708e517d51171815a249c81",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 748.6
+      },
+      {
+        "class": "panic",
+        "file": "2llq785f52ab7f72f21b0bebf4d6d1491c50c14b",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 350.0
+      },
+      {
+        "class": "panic",
+        "file": "2hbla26df0ce776277705000076acaff07397b2f",
+        "n_faces": 2,
+        "best_conf": 1.0,
+        "time_ms": 175.8
+      },
+      {
+        "class": "panic",
+        "file": "6dq726e426e48c99e92e223ae126ff22473ea81f",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 383.7
+      },
+      {
+        "class": "panic",
+        "file": "dlzg023422dfcb34cb44f3c03b6c422406d035cf",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 454.0
+      },
+      {
+        "class": "panic",
+        "file": "f7xt648b78b2d283a1e8d72d608857817e2e7e16",
+        "n_faces": 3,
+        "best_conf": 0.999,
+        "time_ms": 916.6
+      },
+      {
+        "class": "sadness",
+        "file": "uxtp7ddcd77ddac31cccb01debeb5724737d68db",
+        "n_faces": 2,
+        "best_conf": 1.0,
+        "time_ms": 160.7
+      },
+      {
+        "class": "sadness",
+        "file": "2bnab446cec7609e571b3995f84ec89b90f77c9e",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 242.3
+      },
+      {
+        "class": "sadness",
+        "file": "yjcm77150060334c0acc65e75c23ce6f57356c01",
+        "n_faces": 2,
+        "best_conf": 1.0,
+        "time_ms": 383.3
+      },
+      {
+        "class": "sadness",
+        "file": "d6c197364492a09949693414df99f7de299ca534",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 308.6
+      },
+      {
+        "class": "sadness",
+        "file": "xg2d3d3d4c1a977ed60baaea388d08353be36967",
+        "n_faces": 1,
+        "best_conf": 1.0,
+        "time_ms": 325.8
+      }
+    ],
+    "detected": 20,
+    "total": 20,
+    "mean_conf": 1.0
+  },
+  "multi_face": {
+    "n_faces": 2,
+    "faces": [
+      {
+        "bbox": [
+          1142.3573486328125,
+          85.64197845458983,
+          1453.3401611328125,
+          519.0834396362304
+        ],
+        "confidence": 0.9999957084655762
+      },
+      {
+        "bbox": [
+          287.26105346679685,
+          48.149987792968744,
+          546.1164489746094,
+          403.8668579101562
+        ],
+        "confidence": 0.9995447993278503
+      }
+    ],
+    "time_ms": 131.7
+  },
+  "empty_bg": {
+    "n_faces": 0,
+    "time_ms": 137.8
+  }
+}

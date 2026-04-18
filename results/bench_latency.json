@@ -1,0 +1,81 @@
+{
+  "vit": {
+    "name": "ViT-B/16",
+    "load_sec": 11.1,
+    "latency": {
+      "n": 20,
+      "mean_ms": 339.4,
+      "median_ms": 316.9,
+      "p95_ms": 620.1,
+      "min_ms": 126.0,
+      "max_ms": 841.0
+    },
+    "accuracy": 1.0,
+    "correct": 20,
+    "total": 20,
+    "preds": [
+      "anger",
+      "anger",
+      "anger",
+      "anger",
+      "anger",
+      "happy",
+      "happy",
+      "happy",
+      "happy",
+      "happy",
+      "panic",
+      "panic",
+      "panic",
+      "panic",
+      "panic",
+      "sadness",
+      "sadness",
+      "sadness",
+      "sadness",
+      "sadness"
+    ]
+  },
+  "ensemble": {
+    "name": "Ensemble",
+    "load_sec": 17.88,
+    "latency": {
+      "n": 20,
+      "mean_ms": 702.2,
+      "median_ms": 694.8,
+      "p95_ms": 1093.9,
+      "min_ms": 364.8,
+      "max_ms": 1297.4
+    },
+    "accuracy": 1.0,
+    "correct": 20,
+    "total": 20,
+    "preds": [
+      "anger",
+      "anger",
+      "anger",
+      "anger",
+      "anger",
+      "happy",
+      "happy",
+      "happy",
+      "happy",
+      "happy",
+      "panic",
+      "panic",
+      "panic",
+      "panic",
+      "panic",
+      "sadness",
+      "sadness",
+      "sadness",
+      "sadness",
+      "sadness"
+    ]
+  },
+  "agreement": {
+    "same_class": 20,
+    "total": 20,
+    "rate": 1.0
+  }
+}
