@@ -708,12 +708,25 @@ def _load_torch_checkpoint(model_path: Path) -> tuple[Any, dict, dict, "Any"]:
     return ckpt, args, meta, torch
 
 
-def _is_siglip_ckpt(args: dict, meta: dict) -> bool:
-    """체크포인트 내 메타로 SigLIP 판별.  siglip_name 키가 있으면 SigLIP."""
+def _is_siglip_ckpt(args: dict, meta: dict, model_path: Optional[Path] = None) -> bool:
+    """체크포인트 내 메타로 SigLIP 판별.
+    1) args/meta 에 siglip_name 키 존재
+    2) meta.model_name 이 siglip 로 시작
+    3) distill_siglip.py 산출물: args.src_ckpt 파일명에 siglip
+    4) ckpt 파일명 자체에 'siglip'
+    5) state_dict 에 'vision_encoder.siglip' prefix 키 존재 (최종 fallback)
+    """
     if "siglip_name" in args or "siglip_name" in meta:
         return True
     mn = meta.get("model_name", "") or ""
     if mn.startswith("siglip"):
+        return True
+    # distill 산출물 — src_ckpt 추적
+    src = args.get("src_ckpt") or args.get("src-ckpt") or ""
+    if isinstance(src, str) and "siglip" in src.lower():
+        return True
+    # 파일명 heuristic (exp09_siglip_kd_*.pt 같은 distill 산출물)
+    if model_path is not None and "siglip" in Path(model_path).name.lower():
         return True
     return False
 
@@ -1003,7 +1016,7 @@ def _load_torch(model_path: Path,
                 tta_hflip: bool = True) -> dict:
     """torch .pt 체크포인트 — ViT / SigLIP 자동 감지.  tta / auto_face_crop flag 전달."""
     ckpt, args, meta, _torch = _load_torch_checkpoint(model_path)
-    if _is_siglip_ckpt(args, meta):
+    if _is_siglip_ckpt(args, meta, model_path=model_path):
         return _load_torch_siglip(
             model_path, force_cpu=force_cpu, tta=tta,
             auto_face_crop=auto_face_crop,
@@ -1360,6 +1373,109 @@ def predict_probs_batch(model_obj: dict,
     return probs
 
 
+# ==========================================================================
+# Multi-face API — 한 이미지에 얼굴 여러 개인 경우 각각 분류
+# ==========================================================================
+
+def detect_all_faces(image: ImageLike,
+                     margin: float = 0.1,
+                     min_face_size: int = 20,
+                     min_conf: float = 0.9,
+                     device: str = "auto") -> list:
+    """모든 얼굴 검출 + margin crop 한 PIL 리스트 반환.
+    얼굴 0건이면 빈 리스트. (classifier 에 전체 이미지 fallback 은 호출자 책임)
+
+    Args:
+        image: str/Path/PIL.Image
+        margin: bbox 확장 비율 (0.1 = 10%)
+        min_face_size: MTCNN min_face_size
+        min_conf: 얼굴 confidence 하한 (0.9 추천)
+        device: 'auto'|'cuda'|'cpu'
+    """
+    import math  # top-level import 없음 (lazy)
+    import torch
+    from facenet_pytorch import MTCNN
+    pil = _load_pil(image)
+    dev = device if device != "auto" else \
+          ("cuda" if torch.cuda.is_available() else "cpu")
+    # keep_all=True 전용 인스턴스 (기존 single-face MTCNN 캐시와 분리)
+    mtcnn = MTCNN(
+        image_size=224,
+        margin=max(0, int(margin * 224)),
+        min_face_size=int(min_face_size),
+        thresholds=[0.6, 0.7, 0.7],
+        keep_all=True,
+        device=dev,
+        post_process=False,
+    )
+    W, H = pil.size
+    boxes, probs = mtcnn.detect(pil)
+    if boxes is None or len(boxes) == 0:
+        return []
+    faces = []
+    for box, conf in zip(boxes, probs):
+        if conf is None or conf < min_conf:
+            continue
+        x0, y0, x1, y1 = map(float, box)
+        bw = max(1.0, x1 - x0)
+        bh = max(1.0, y1 - y0)
+        mx = bw * margin
+        my = bh * margin
+        x0 = max(0.0, x0 - mx)
+        y0 = max(0.0, y0 - my)
+        x1 = min(float(W), x1 + mx)
+        y1 = min(float(H), y1 + my)
+        if (x1 - x0) <= 1 or (y1 - y0) <= 1:
+            continue
+        faces.append({
+            "crop": pil.crop((int(x0), int(y0),
+                              int(math.ceil(x1)), int(math.ceil(y1)))),
+            "bbox": (x0, y0, x1, y1),
+            "confidence": float(conf),
+        })
+    return faces
+
+
+def predict_multi_face(model_obj: dict,
+                       image: ImageLike,
+                       tta: Optional[bool] = None,
+                       min_conf: float = 0.9,
+                       margin: float = 0.1,
+                       min_face_size: int = 20) -> list:
+    """여러 얼굴이 있는 이미지 → 각 얼굴별 (label, confidence, bbox, probs) 리스트.
+
+    얼굴 0건 (MTCNN 실패) 시 **전체 이미지 fallback** 1건 반환 (기존 single predict 동작 유지).
+    """
+    faces = detect_all_faces(image, margin=margin,
+                             min_face_size=min_face_size,
+                             min_conf=min_conf)
+    if not faces:
+        # fallback: 전체 이미지 단일 분류
+        probs = predict_probs(model_obj, image, tta=tta)
+        idx = int(np.argmax(probs))
+        return [{
+            "label": CLASSES[idx],
+            "confidence": float(probs[idx]),
+            "bbox": None,
+            "face_confidence": None,
+            "probs": {c: float(p) for c, p in zip(CLASSES, probs)},
+            "fallback": True,
+        }]
+    out = []
+    for f in faces:
+        probs = predict_probs(model_obj, f["crop"], tta=tta)
+        idx = int(np.argmax(probs))
+        out.append({
+            "label": CLASSES[idx],
+            "confidence": float(probs[idx]),
+            "bbox": [round(v, 2) for v in f["bbox"]],
+            "face_confidence": round(f["confidence"], 4),
+            "probs": {c: float(p) for c, p in zip(CLASSES, probs)},
+            "fallback": False,
+        })
+    return out
+
+
 def predict_batch(model_obj: dict,
                   images: list,
                   tta: Optional[bool] = None) -> list[tuple[str, float]]:
@@ -1419,6 +1535,11 @@ def _cli():
     ap.add_argument("--tta-hflip", default="on", choices=["on", "off"],
                     help="각 view 별 좌우반전 추가 여부. on (기본) | off. "
                          "기존 --tta 와 동일한 hflip 동작. --tta 가 off 이면 무시.")
+    ap.add_argument("--multi-face", action="store_true",
+                    help="이미지 1장에 얼굴 여러 개 검출 + 각각 분류. "
+                         "얼굴 0건일 땐 전체 이미지 fallback 1건 반환.")
+    ap.add_argument("--multi-min-conf", type=float, default=0.9,
+                    help="multi-face 모드의 얼굴 검출 confidence 하한.")
     args = ap.parse_args()
 
     auto_face_crop = (args.auto_face_crop in ("on", "auto"))
@@ -1466,6 +1587,24 @@ def _cli():
         )
         if not image_paths:
             ap.error(f"--image-dir 에 이미지 없음: {d}")
+
+    # --multi-face 모드 (단일 이미지에 얼굴 여러 개)
+    if args.multi_face:
+        if len(image_paths) != 1:
+            ap.error("--multi-face 는 --image 단일 경로와만 조합 가능")
+        results = predict_multi_face(
+            model_obj, image_paths[0],
+            min_conf=args.multi_min_conf,
+            margin=args.face_crop_margin,
+            min_face_size=args.face_crop_min_size,
+        )
+        print(json.dumps({
+            "image": image_paths[0],
+            "n_faces": sum(1 for r in results if not r.get("fallback")),
+            "fallback_used": any(r.get("fallback") for r in results),
+            "faces": results,
+        }, ensure_ascii=False))
+        return
 
     if len(image_paths) == 1:
         # 단일 — 기존 출력 포맷 유지 (backward compatible)
