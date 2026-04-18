@@ -62,6 +62,38 @@ python predict.py \
 
 입력 방식 3가지 중 하나 선택: `--image` (단일) / `--images` (여러 장, 공백 구분) / `--image-dir` (디렉터리). 여러 장이면 JSON 한 줄씩 (ndjson) 으로 출력.
 
+### 한 이미지에 얼굴 여러 개 — `--multi-face`
+
+단체 사진·그룹 이미지처럼 **한 장에 얼굴이 여러 개** 있으면 MTCNN 이 모두 검출하고 각 얼굴별로 개별 분류.
+
+```bash
+# 모든 얼굴 검출 + 각각 감정 분류
+python predict.py \
+    --model models/exp05_vit_b16_two_stage.pt \
+    --image group_photo.jpg \
+    --multi-face
+
+# 얼굴 검출 confidence 임계값 조절 (기본 0.9)
+python predict.py ... --multi-face --multi-min-conf 0.85
+```
+
+출력 예시 (JSON):
+```json
+{
+  "image": "group.jpg",
+  "n_faces": 2,
+  "fallback_used": false,
+  "faces": [
+    {"label": "anger",  "confidence": 0.951, "bbox": [789, 402, 2025, 1958],
+     "face_confidence": 1.0, "probs": {...}, "fallback": false},
+    {"label": "happy",  "confidence": 0.395, "bbox": [2818, 1463, 2875, 1534],
+     "face_confidence": 0.9998, "probs": {...}, "fallback": false}
+  ]
+}
+```
+
+**얼굴 0건 일 때**: 회색 배경·사물 등 얼굴 없는 이미지는 `fallback_used=true` 로 전체 이미지를 classifier 에 넘김 (graceful fallback — crash 없음).
+
 CLI 출력 예시:
 
 ```
@@ -100,7 +132,7 @@ print('smoke test PASS')
 ## Python API
 
 ```python
-from predict import load_model, predict, predict_batch
+from predict import load_model, predict, predict_batch, predict_multi_face
 
 # 단일 모델 로드 (메인 제출 경로)
 model = load_model(
@@ -116,6 +148,14 @@ print(f"{label}: {conf:.3f}")
 results = predict_batch(model, ["a.jpg", "b.jpg", "c.jpg", "d.jpg"])
 for path, (lbl, conf) in zip(["a.jpg", "b.jpg", "c.jpg", "d.jpg"], results):
     print(f"{path}: {lbl} ({conf:.3f})")
+
+# (c) 한 이미지에 얼굴 여러 개 (그룹 사진)
+faces = predict_multi_face(model, "group.jpg", min_conf=0.9)
+for f in faces:
+    if f.get("fallback"):
+        print(f"얼굴 미검출 → 전체 이미지: {f['label']} ({f['confidence']:.3f})")
+    else:
+        print(f"{f['label']} ({f['confidence']:.3f}) @ bbox={f['bbox']}")
 
 # (c) 확률 벡터만 필요할 때
 from predict import predict_probs_batch
