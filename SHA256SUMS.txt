@@ -1,0 +1,8 @@
+# SHA256SUMS — yua-encoder v1.0.0 (2026-04-18)
+# 파일 무결성 확인용. Download 후: sha256sum -c SHA256SUMS.txt
+
+1835562307595abc46acfdbbd09a31a2a92ebb57457841a867240188d51165f7  models/exp02_resnet50_ft_crop_aug.h5
+7817468535cfa140e079607d751470563d16494b75915e117ea05859109beec6  models/exp04_effnet_ft_balanced.h5
+bca39bb0996f79c9db2f11de215c356fc48d0727b2053d13218501e6c8a33ceb  models/exp05_vit_b16_two_stage.pt
+6ef448047a6b7818fe41653d42c1ec90c867d734ba44b0df5ce4746fd43efa47  models/exp09_siglip_kd_tsoff_T4_a07_uf4.pt
+1149dbc30e9fece0f34f127ac3b821aebba9765288c3a86f85c4e26983f12adc  models/ensemble_with_kd.json

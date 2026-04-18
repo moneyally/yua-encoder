@@ -326,44 +326,50 @@ else:
 
 ### 모델 가중치 다운로드
 
-`.h5` / `.pt` 파일은 GitHub 100MB/file 제한 때문에 레포에 포함되지 않는다. [Releases](https://github.com/moneyally/yua-encoder/releases) 페이지에서 내려받아 `models/` 아래에 둬야 `ensemble_*.json` 이 동작한다.
+`.h5` / `.pt` 파일은 GitHub 100MB/file 제한 때문에 레포에 포함되지 않는다. [Releases v1.0.0](https://github.com/moneyally/yua-encoder/releases/tag/v1.0.0) 페이지에서 내려받아 `models/` 아래에 둬야 앙상블 config (`ensemble_with_kd.json`) 가 동작한다.
 
 ```bash
 # 1) gh CLI 로 전체 다운로드 (권장)
-gh release download v2026-04-e8 -R moneyally/yua-encoder -D models/ \
-    --pattern "*.h5" --pattern "*.pt"
+gh release download v1.0.0 -R moneyally/yua-encoder -D models/ \
+    --pattern "*.h5" --pattern "*.pt" --pattern "*.json"
+curl -L -o SHA256SUMS.txt \
+    https://github.com/moneyally/yua-encoder/releases/download/v1.0.0/SHA256SUMS.txt
+sha256sum -c SHA256SUMS.txt   # 무결성 체크
 
 # 2) 또는 브라우저에서 Releases 페이지 직접 다운로드
-#    https://github.com/moneyally/yua-encoder/releases/tag/v2026-04-e8
+#    https://github.com/moneyally/yua-encoder/releases/tag/v1.0.0
 
 # 3) curl 개별 다운로드 (공개 URL)
 for f in exp02_resnet50_ft_crop_aug.h5 exp04_effnet_ft_balanced.h5 \
-         exp05_vit_b16_two_stage.pt    exp06_siglip_linear_probe.pt; do
+         exp05_vit_b16_two_stage.pt    exp09_siglip_kd_tsoff_T4_a07_uf4.pt \
+         ensemble_with_kd.json; do
     curl -L -o "models/$f" \
-        "https://github.com/moneyally/yua-encoder/releases/download/v2026-04-e8/$f"
+        "https://github.com/moneyally/yua-encoder/releases/download/v1.0.0/$f"
 done
 ```
 
-Release 파일 총 용량 약 1.3GB (ResNet50 205M + EfficientNet-B0 32M + ViT-B/16 328M + SigLIP+yua-encoder 468M + sha256 체크섬).
+Release 파일 총 용량 약 1.03GB (ResNet50 205M + EfficientNet-B0 32M + ViT-B/16 328M + SigLIP KD 468M + ensemble json + SHA256SUMS).
+
+**ViT 단일만 쓸 경우** (TF 미설치 / 경량 환경) `exp05_vit_b16_two_stage.pt` 하나만 받으면 된다 (328M).
 
 ### 앙상블 Config 구조 (`ensemble_*.json`)
 
 ```json
 {
-  "_val_acc": 0.844167,
-  "_val_macro_f1": 0.845826,
-  "_val_nll": 0.502313,
+  "_val_acc": 0.8692,
+  "_val_macro_f1": 0.8697,
+  "_val_nll": 0.4593,
   "_method": "weight_opt_raw",
   "models": [
-    {"path": "models/exp02_resnet50_ft_crop_aug.h5",   "weight": 0.134425},
-    {"path": "models/exp04_effnet_ft_balanced.h5",     "weight": 0.115084},
-    {"path": "models/exp05_vit_b16_two_stage.pt",      "weight": 0.287014},
-    {"path": "models/exp06_siglip_linear_probe.pt",    "weight": 0.463477}
+    {"path": "models/exp02_resnet50_ft_crop_aug.h5",              "weight": 0.041151},
+    {"path": "models/exp04_effnet_ft_balanced.h5",                "weight": 0.073014},
+    {"path": "models/exp05_vit_b16_two_stage.pt",                 "weight": 0.522546},
+    {"path": "models/exp09_siglip_kd_tsoff_T4_a07_uf4.pt",        "weight": 0.363290}
   ]
 }
 ```
 
-4개 모델의 softmax 출력을 weight 로 가중합 → argmax. weight 는 validation set 기준 Differential Evolution 으로 최적화. `ensemble_best.json` 은 학습 bbox 기준 (val_acc 0.86), `ensemble_mtcnn.json` 은 MTCNN auto-crop 기준 (val_acc 0.8442) — 두 파일의 weight 값이 다른 이유.
+4개 모델의 softmax 출력을 weight 로 가중합 → argmax. weight 는 validation set 기준 Differential Evolution 으로 최적화. ViT-B/16 (52%) + SigLIP-KD (36%) 가 실질 주축, CNN 두 개 (11%) 는 다양성 보조. `ensemble_best.json` / `ensemble_mtcnn.json` 은 중간 실험 결과로 레포 내 보존 (E6 기반).
 
 ## Performance (val 1200장, 4-class balanced)
 
@@ -405,6 +411,46 @@ Cold start 는 서버 부팅 직후 warmup 스크립트 1~2 샘플로 제거 (ML
 
 ACCEPT 평균 confidence 0.926. 수집되는 의사 라벨의 품질이 자기개선 루프의 안정성을 보장.
 
+## Reproducibility — 실측 검증
+
+재현 가능성 증명 — 로컬 `user4_env` (NVIDIA A40) 에서 실제 노트북과 파이썬 스크립트를 돌린 결과.
+
+### Notebook 실행 결과 (`jupyter nbconvert --execute`)
+
+두 notebook 모두 clean kernel 에서 end-to-end 실행 성공. val_dir 가 있어 Cell 7 까지 전부 동작.
+
+| Notebook | Cell 5 (load) | Cell 6 (1장 추론) | Cell 7 (val 20장) | 전체 |
+|---|:-:|:-:|:-:|:-:|
+| `02_vit_single_colab.ipynb` | 6.2s | anger 0.935 / **202ms warm** | **20/20 acc 1.000** | ✓ pass |
+| `01_ensemble_colab.ipynb` | 19.0s | anger 0.944 / **592ms warm** | **20/20 acc 1.000** | ✓ pass |
+
+두 모델 모두 val 샘플 20장에서 confusion matrix 대각선 [5,5,5,5]. 앙상블이 단일 ViT 대비 confidence 약간 높음 (0.944 vs 0.935) + warm latency 3배 (592ms vs 202ms).
+
+### 파이썬 테스트 결과 요약 (`results/*.json`)
+
+| 스크립트 | 항목 | ViT 단일 | **앙상블 (메인)** |
+|---|---|---:|---:|
+| `bench_latency.py` (val 20, warmup 5) | model p50 | 0.42s | 0.67s |
+| (MLPerf 스타일) | model p95 | 0.68s | 0.69s |
+| | accuracy | 20/20 | 20/20 |
+| | 예측 agreement | — | **20/20 (100%)** |
+| `scripts/tests/e2e_runner.py` (4장 × GPT-5.1) | mean confidence | 0.926 | **0.949** |
+| | warm model latency | 0.42s | 0.67s |
+| | LLM latency (GPT-5.1) | 2.65s | 1.79s |
+| | total e2e | 3.07s | 2.40s |
+| `scripts/tests/test_face_detection.py` (MTCNN) | val 20장 단일 얼굴 | — | **20/20 탐지** |
+| | 합성 multi-face | — | 2/2 탐지 |
+| | 빈 배경 fallback | — | 0개 (원본 사용) |
+| `scripts/tests/test_asd_pipeline.py` (ASD 시뮬) | ACCEPT (conf≥0.85) | — | **18/20 (90%)** |
+| | RETRY (conf<0.6) | — | 0/20 |
+| | DROP (그 외) | — | 2/20 (10%) |
+| | raw accuracy | — | 100% |
+| `scripts/ensemble_search.py` | val 1200장 acc | — | **0.8692** |
+| + `scripts/tests/ablation_weights.py` | val 1200장 Macro F1 | — | 0.8697 |
+| | val 1200장 NLL | — | 0.4593 |
+
+전체 결과 JSON: `results/bench_latency.json`, `results/e2e_comparison.json`, `results/face_detection_test.json`, `results/asd_pipeline_test.json`, `results/ablation_weights.json`.
+
 ## Pipeline
 
 ```mermaid
@@ -412,16 +458,22 @@ flowchart LR
     A[Raw Image] --> B[EXIF orientation<br/>normalize]
     B --> C{Face crop}
     C -->|bbox 제공| D[Crop by annot_A.boxes]
-    C -->|bbox 없음| E[MTCNN auto-detect]
-    D --> F{Model tracks}
+    C -->|bbox 없음| E[MTCNN auto-detect<br/>ensemble 레벨 1회 공유]
+    D --> F{4-model ensemble}
     E --> F
-    F -->|A| G[ResNet50 / EfficientNet-B0]
-    F -->|B| H[ViT-B/16 2-stage]
-    F -->|C| I[SigLIP + projection MLP]
-    G --> J[Weighted soft voting]
+    F -->|w=0.041| G1[ResNet50 ft conv5]
+    F -->|w=0.073| G2[EfficientNet-B0 ft block6]
+    F -->|w=0.523| H[ViT-B/16 2-stage]
+    F -->|w=0.363| I[SigLIP + KD distill]
+    G1 --> J[Weighted soft voting<br/>DE-optimized]
+    G2 --> J
     H --> J
     I --> J
-    J --> K[4-class probability]
+    J --> K[softmax probs 4-class]
+    K --> L{Confidence filter<br/>ASD 학습 분기}
+    L -->|≥0.85 AND 정답| M[ACCEPT → rehearsal buffer]
+    L -->|<0.60| N[RETRY]
+    L -->|else| O[DROP self-poisoning guard]
 ```
 
 ## Model Architecture
@@ -452,7 +504,56 @@ flowchart LR
     S --> T[Linear → 4-class]
 ```
 
-SigLIP(Google) 백본 위에 `yua-encoder` 라는 projection wrapper 를 얹었다. Linear probe 모드라 backbone freeze, trainable 29.4M. 구현은 `models_custom/vision_encoder.py`.
+SigLIP (Google) 백본 위에 `yua-encoder` projection wrapper. Linear probe 구성은 backbone freeze, trainable 29.4M. 구현 `models_custom/vision_encoder.py`.
+
+**E6 linear probe** val 0.8192. backbone freeze 유지.
+
+**E9 Knowledge Distillation 버전 (앙상블 최종 member)**
+
+```mermaid
+flowchart TB
+    Teacher["Teacher<br/>앙상블 probs (E2+E4+E5)"] --> TS[Soft label npz<br/>build_soft_labels.py]
+    subgraph Student["Student (yua-encoder)"]
+      P["SigLIP-Base + PixelShuffle + Projection MLP"]
+      P --> Q["classifier head 4-class"]
+    end
+    TS --> KL["KL divergence loss"]
+    GT[Hard label] --> CE["Cross-entropy loss"]
+    Q --> CE
+    Q --> KL
+    KL --> LOSS["Total = α·KL(T²) + (1-α)·CE<br/>α=0.7, T=4"]
+    CE --> LOSS
+```
+
+마지막 4 transformer block unfreeze + KD (`scripts/distill_siglip.py`). Teacher 는 CNN+ViT 기반 ensemble soft probs. Temperature=4 smoothing, α=0.7. val 0.8192 → **0.8383** (+1.91%p, ablation 5 config 중 best).
+
+### Ensemble — 4-model weighted voting (메인 제출)
+
+앞의 세 트랙에서 학습된 4개 checkpoint 를 soft voting 으로 결합. Weight 는 validation set 기준 Differential Evolution (`scripts/ensemble_search.py`) 으로 탐색.
+
+| Member | Backbone | 단독 val_acc | **Weight** | 역할 |
+|---|---|---:|---:|---|
+| exp02 | ResNet50 ft (conv5) | 0.7758 | 0.041 | CNN 다양성 |
+| exp04 | EfficientNet-B0 ft (block6) | 0.7933 | 0.073 | CNN 다양성 |
+| exp05 | ViT-B/16 2-stage | 0.8383 | **0.523** | 주축 (global attention) |
+| exp09 | SigLIP-Base + KD distill | 0.8333 | **0.363** | 주축 (상보적 feature) |
+
+**단독 val_acc 주석**: E5 ViT 는 학습 시 best checkpoint 기준 0.8458 (experiments.md, TL;DR 값) 이지만 위 표의 0.8383 은 DE weight 탐색 시 raw logit 재평가값. 평가 프로토콜 차이 (전자는 학습 시 val 모니터링, 후자는 argmax + softmax cache). 앙상블 0.8692 는 후자 프로토콜 기준.
+
+MTCNN face crop + TTA 는 ensemble 레벨에서 1회 공유 (`predict.py:_load_ensemble`) → member 간 중복 제거, warm latency 3배 단축 (1.2s → 0.7s).
+
+**Ablation 결과 (val 1200장, `results/ablation_weights.json`)**
+
+| Config | val_acc | vs FULL |
+|---|---:|---:|
+| Single ViT (E5) | 0.8383 | -3.08%p |
+| Single SigLIP KD (E9) | 0.8333 | -3.58%p |
+| CNN only (E2+E4) | 0.8042 | -6.50%p |
+| No CNN (E5+E9) | 0.8600 | -0.92%p |
+| No E9 (E2+E4+E5) | 0.8417 | -2.75%p |
+| **Full 4-model (메인)** | **0.8692** | — |
+
+ViT + SigLIP-KD 조합이 실질 주축 (0.8600), CNN 두 개는 +0.92%p 로 다양성 보조. 심사에 제출하는 구성은 full 4-model.
 
 ## Data
 
@@ -532,11 +633,17 @@ emotion-project/
 │   ├── ensemble_mtcnn.json     # MTCNN 실전 val_acc 0.8442 (중간 실험)
 │   └── ensemble_with_kd.json   # **val 0.8692 메인 제출** (4 모델 + SigLIP KD)
 │
+├── notebooks/
+│   ├── 01_ensemble_colab.ipynb # 메인 Release 재현 (val 0.8692)
+│   └── 02_vit_single_colab.ipynb # fallback ViT 단일 (val 0.8458)
+│
 ├── scripts/
 │   ├── train.py                # CNN (ResNet50 / VGG16 / EfficientNet)
 │   ├── train_vit.py            # ViT-B/16 2-stage
 │   ├── train_siglip.py         # SigLIP + projection MLP
+│   ├── distill_siglip.py       # SigLIP KD (E9 student 학습)
 │   ├── ensemble_search.py      # 앙상블 weight 최적화 (5 method 비교)
+│   ├── bench_latency.py        # MLPerf 스타일 p50/p95 측정
 │   ├── build_soft_labels.py    # 3-rater vote → soft target npz
 │   ├── finetune_soft.py        # soft label continued fine-tune
 │   ├── compare_models.py       # 모델 A vs B (confmat + McNemar)
@@ -544,6 +651,12 @@ emotion-project/
 │   ├── normalize_orientation.py / validate_data_rot.py
 │   ├── verify_rotation_math.py / precrop_images.py
 │   ├── quick_sweep.sh / restore_env.sh
+│   └── tests/                  # 실측 검증 스크립트 (결과 → results/*.json)
+│       ├── e2e_runner.py           # predict.py → GPT-5.1 e2e 4장
+│       ├── bench_latency.py 외 (위) 와 별도
+│       ├── test_face_detection.py  # MTCNN 20장 + 합성 multi-face
+│       ├── test_asd_pipeline.py    # 자폐 아동 학습 분기 시뮬
+│       └── ablation_weights.py     # 11 config weight 조합 비교
 │
 ├── models_custom/
 │   └── vision_encoder.py       # yua-encoder — SigLIP projection wrapper
