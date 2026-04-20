@@ -1,0 +1,328 @@
+{
+  "n": 40,
+  "n_per_class": 10,
+  "seed": 42,
+  "gpt_model": "gpt-5.4",
+  "ensemble": {
+    "correct": 37,
+    "total": 40,
+    "acc": 0.925
+  },
+  "gpt": {
+    "correct": 33,
+    "valid": 40,
+    "unparseable": 0,
+    "acc": 0.825,
+    "mean_latency_sec": 1.8471625832811696
+  },
+  "cases": {
+    "both_right": 31,
+    "ens_only": 6,
+    "gpt_only": 2,
+    "both_wrong": 1
+  },
+  "per_class": {
+    "anger": {
+      "ensemble": 10,
+      "gpt": 4,
+      "total": 10
+    },
+    "happy": {
+      "ensemble": 10,
+      "gpt": 10,
+      "total": 10
+    },
+    "panic": {
+      "ensemble": 9,
+      "gpt": 9,
+      "total": 10
+    },
+    "sadness": {
+      "ensemble": 8,
+      "gpt": 10,
+      "total": 10
+    }
+  },
+  "results": [
+    {
+      "path": "8qnea6a7774d0d66422d00f6c022b77e3dd273f69d78899dd7848d7fe0726ynen.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "27zb2d2e6b8722c9f3108ef67c2846fb082a31386933fe3ad5e942833483eiv11.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "iina898cafc743643b5a659907d5f40af7847d7071b72fbc875a0a0b74e73r9fx.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "anger",
+      "gpt_raw": "anger"
+    },
+    {
+      "path": "ghym9ee3851092fcb4e0ed0e2b15d15e50eb5b91858139040dd004bba34a3eeay.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "anger",
+      "gpt_raw": "anger"
+    },
+    {
+      "path": "fdn7f6ab469cbd518c981b13ab12b811b867a84ac669a1c6a9b681c42a783an1e.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "b1sz461fcf86b6b1ab9303afdd283f8fab779f6294ff73f48c5c4ff1cbfa3t9vj.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "7yht0af78f7b0b0884f3c06f03301ff42314a98172708cf27d0d5716b67f1dvy7.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "anger",
+      "gpt_raw": "anger"
+    },
+    {
+      "path": "xy5c9ed0e385fce3edf277e61e6bfa7c7452e8e48551a509d5742f8cda290o91g.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "7fx58e953e45a901fec20a0332bb69d6ffe090be73dfded40c963c5b703a61hvt.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "anger",
+      "gpt_raw": "anger"
+    },
+    {
+      "path": "rkxz2e92e577d1e989bedc9cbeeaee4b8b5b8afa9a52ab5bdbaaa5f7ae55f17w8.jpg",
+      "gt": "anger",
+      "ensemble": "anger",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "26jke7a4d977733b6393b8ee855d7baa163e6a748ea6c00917286c8711872okjt.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "1xyw67f4072154c424f4e5ec0435f11429f92451154490aa4079311ecc120rctj.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "64vs6210cde7e5718a65f7001f44f94c2467800af1797126251a1753e3caepi5p.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "e91m0de0eea0ca3baead46d3493c9aefb67024fd74e49daeb6f84b24dc1bc8p88.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "f7v84eb903f3b55bf97edfa779bdd9d99d2b5990ee70973ebb25eded42fe4bqhk.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "wfgs31d1e8de47bc15c3c59acad3a31ea48a94e013ec19e49f7621631178cr4j7.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "1pfi77aeecb73aa317471a6130761be635fecacec509e6561c40e6e3a4eado6ia.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "z0mz2a88088df737fd4c647f77dcd8d60659630c36dd2d237f029a29aaa629b8r.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "d40qbfcfffbfff7cb189676beeb9b8bb84b51b3d3cb10321e9934ab113b3b9qg1.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "yaswc6fd8ac60f7077ed1df6a172ca99cccc6c9d177719dc048563500e6d9uja5.jpg",
+      "gt": "happy",
+      "ensemble": "happy",
+      "gpt": "happy",
+      "gpt_raw": "happy"
+    },
+    {
+      "path": "rise86ecd343f324c453553b3b143bbb76a07cb314f801c46e7c1453446cb7var.jpg",
+      "gt": "panic",
+      "ensemble": "anger",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "dsj149854f5c5bcdfc2580ba941e29f891827cb887ddb2228a005145c98fbae4i.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "thvd6f3531d40f3eee044f13b3914045bfb51344baa5b8ff3bb4363190ebeedi3.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "iij636e2ba8e4b19cd971f24e31089dffe204fdf0e6abca90c82c019019a0qqhx.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "0cms066a1e2c2494412da9e9623a22d2d1e7f2cb24722307617eff217222fw548.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "arha1faa31798f4ba91918ff8122ee4b1f23264b7966d8ec611bf1276152fvvjr.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "rnp7023fa1990a3d5c074020df53643425eb2053fdf53c0fa534cb1543f599gii.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "mne42560d6097e7008945e0a86180d76172e91e6971a86e0e12ac14465910u6xx.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "alz105d515f07de66db231ccf6923f559e1c1c3966ee9ec4ec4d0369f19e2nl6d.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "dkps6a239d6644ee60b045042f4e4222dd4422edd7902002eb2256220e20d0ge8.jpg",
+      "gt": "panic",
+      "ensemble": "panic",
+      "gpt": "panic",
+      "gpt_raw": "panic"
+    },
+    {
+      "path": "logu151c93265a735d4fea043b47321fa6eba5a16f7e30165d3321a59b710qo92.jpg",
+      "gt": "sadness",
+      "ensemble": "anger",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "6tetfedf6ce0ba9fa9c775eafea7b3d6780e9fb7624a437fc7bae6bce7c31ksx2.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "6hns105450651354b518e97bdd8062c5e49076ee9c13b9cb367057f89995fwbt2.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "ooyna44dcac817720e4ff2f646656fd313372a79f98af7dc483ccfd8473608e6s.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "6nhuff3d93dd5b3d90b8454f9c63d9259e64339912fdbff8e9ef8a4842f45re0w.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "net718f2a1a797ad8e6719f89cdd2bea862738b3adf10fafa1fea8fa49788zrk5.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "m9r14f6ed0621dcf88463e2b7e338bb6fea7b0dbb50dbb21c4662afe58fdfmjei.jpg",
+      "gt": "sadness",
+      "ensemble": "anger",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "i16c9511e9de5fbdf4c79272b781718a8187c0424f6ab39977baff426f073gdlu.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "3aal88ab56bb33b258ba9bac8d6856b350ba9a05bb4baaf5888819447fb88oq5g.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    },
+    {
+      "path": "sryf4d69f54cc984302759dc3c397ce4aa4fc828d2759d34c2eed3b7e0844lhjf.jpg",
+      "gt": "sadness",
+      "ensemble": "sadness",
+      "gpt": "sadness",
+      "gpt_raw": "sadness"
+    }
+  ]
+}
