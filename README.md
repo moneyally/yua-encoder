@@ -29,7 +29,7 @@ pipeline_tag: image-classification
 - **Val acc 0.8692** (ensemble, 4-model weighted voting with KD teacher) ← 메인 제출
 - Single-model best **0.8458** (ViT-B/16 2-stage fine-tune) ← fallback
 - 추론 latency (warm, p95): ensemble 0.69s / ViT 0.68s — 동급
-- 예측 분기 품질 (val 20장 시뮬): ACCEPT 90% · DROP 10% · rehearsal buffer mean conf 0.926
+- 예측 분기 (val 20장 시뮬): conf ≥ 0.85 통과 18/20, 거부 2/20
 - 3-rater agreement ceiling 약 0.88. 앙상블이 ceiling 권역 내 (0.87)
 - GPT Vision 비교 (val 40장 zero-shot): 앙상블 92.5% / GPT-5.4 82.5% / GPT-5.1 75.0%
 - 재현 환경: A40 48GB, conda `user4_env`, seed 42
@@ -895,3 +895,4 @@ pip install numpy pandas scikit-learn matplotlib Pillow opencv-python
 ---
 
 **Version**: 2026-04-e10
+
