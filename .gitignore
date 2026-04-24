@@ -112,3 +112,18 @@ models/exp09_*
 logs/exp09_*
 logs/kd_*
 logs/teacher_soft_*
+
+# fullcombo 실험 (exp10/11/12) 대용량 ckpt
+models/exp1[0-9]_*.pt
+models/exp1[0-9]_*.swa.pt
+logs/exp1[0-9]_*
+
+# 임시 프로세스 파일
+logs/*.bg
+logs/*.pid
+logs/morning_report.md
+
+# asd 프롬프트 실험 부산물
+results/asd_prompt_v2.json
+results/asd_trace.json
+logs/e9_*

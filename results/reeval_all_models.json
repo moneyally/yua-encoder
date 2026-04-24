@@ -1,0 +1,105 @@
+{
+  "val_n": 1200,
+  "results": [
+    {
+      "name": "E1_resnet50_frozen",
+      "ckpt": "models/exp01_resnet50_baseline.h5",
+      "claimed": "0.4042",
+      "auto_face_crop": false,
+      "acc": 0.37916666666666665,
+      "macro_f1": 0.35866550085397786,
+      "nll": 1.3487699031829834,
+      "method": "inference",
+      "n": 1200,
+      "load_sec": 11.3,
+      "time_sec": 308.3
+    },
+    {
+      "name": "E2_resnet50_ft",
+      "ckpt": "models/exp02_resnet50_ft_crop_aug.h5",
+      "claimed": "0.7733",
+      "auto_face_crop": true,
+      "acc": 0.7758333333333334,
+      "macro_f1": 0.7746819639917689,
+      "nll": 0.636244535446167,
+      "method": "cache",
+      "n": 1200,
+      "time_sec": 0.029
+    },
+    {
+      "name": "E3_adv_adamw",
+      "ckpt": "models/exp03_adv_adamw_cosine.h5",
+      "claimed": "0.7617",
+      "auto_face_crop": true,
+      "acc": 0.7375,
+      "macro_f1": 0.7391984980378459,
+      "nll": 0.7146320343017578,
+      "method": "inference",
+      "n": 1200,
+      "load_sec": 2.8,
+      "time_sec": 610.8
+    },
+    {
+      "name": "E4_effnet_ft",
+      "ckpt": "models/exp04_effnet_ft_balanced.h5",
+      "claimed": "0.7958",
+      "auto_face_crop": true,
+      "acc": 0.7933333333333333,
+      "macro_f1": 0.793985445113255,
+      "nll": 0.5665919184684753,
+      "method": "cache",
+      "n": 1200,
+      "time_sec": 0.048
+    },
+    {
+      "name": "E5_vit_b16",
+      "ckpt": "models/exp05_vit_b16_two_stage.pt",
+      "claimed": "0.8458/0.8383",
+      "auto_face_crop": true,
+      "acc": 0.8383333333333334,
+      "macro_f1": 0.8396984694604541,
+      "nll": 0.5222891569137573,
+      "method": "cache",
+      "n": 1200,
+      "time_sec": 0.024
+    },
+    {
+      "name": "E6_siglip_lp",
+      "ckpt": "models/exp06_siglip_linear_probe.pt",
+      "claimed": "0.8192",
+      "auto_face_crop": true,
+      "acc": 0.7941666666666667,
+      "macro_f1": 0.7942543033716216,
+      "nll": 0.5556626915931702,
+      "method": "inference",
+      "n": 1200,
+      "load_sec": 6.8,
+      "time_sec": 476.6
+    },
+    {
+      "name": "E9_siglip_kd_uf4",
+      "ckpt": "models/exp09_siglip_kd_tsoff_T4_a07_uf4.pt",
+      "claimed": "0.8383/0.8333",
+      "auto_face_crop": true,
+      "acc": 0.8333333333333334,
+      "macro_f1": 0.833070349636905,
+      "nll": 0.9197789430618286,
+      "method": "cache",
+      "n": 1200,
+      "time_sec": 0.041
+    },
+    {
+      "name": "ENSEMBLE_FULL",
+      "ckpt": "models/ensemble_with_kd.json",
+      "claimed": "0.8692",
+      "auto_face_crop": true,
+      "acc": 0.8408333333333333,
+      "macro_f1": 0.8432581277232992,
+      "nll": 0.47969120740890503,
+      "method": "inference",
+      "n": 1200,
+      "load_sec": 15.5,
+      "time_sec": 885.8
+    }
+  ]
+}

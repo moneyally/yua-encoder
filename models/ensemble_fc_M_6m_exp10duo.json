@@ -1,0 +1,71 @@
+{
+  "_method": "weight_opt_raw",
+  "_val_acc": 0.875833,
+  "_val_macro_f1": 0.875982,
+  "_val_nll": 0.422596,
+  "_per_model": {
+    "exp02_resnet50_ft_crop_aug": {
+      "val_acc": 0.775833,
+      "val_macro_f1": 0.774682,
+      "val_nll": 0.636245,
+      "temperature": 1.0337
+    },
+    "exp05_vit_b16_two_stage": {
+      "val_acc": 0.838333,
+      "val_macro_f1": 0.839698,
+      "val_nll": 0.522289,
+      "temperature": 1.0728
+    },
+    "exp10_vit_fullcombo": {
+      "val_acc": 0.831667,
+      "val_macro_f1": 0.832031,
+      "val_nll": 0.514447,
+      "temperature": 1.2751
+    },
+    "exp10_vit_fullcombo.swa": {
+      "val_acc": 0.844167,
+      "val_macro_f1": 0.844432,
+      "val_nll": 0.473709,
+      "temperature": 1.2167
+    },
+    "exp11_dinov3_fullcombo.swa": {
+      "val_acc": 0.851667,
+      "val_macro_f1": 0.852844,
+      "val_nll": 0.448192,
+      "temperature": 1.2209
+    },
+    "exp09_siglip_kd_tsoff_T4_a07_uf4": {
+      "val_acc": 0.833333,
+      "val_macro_f1": 0.83307,
+      "val_nll": 0.922579,
+      "temperature": 3.323
+    }
+  },
+  "_notes": "ensemble_search.py 가 선택한 최적 방법. temperature 는 참고값. predict.py 는 weight 만 사용 (raw weighted voting).",
+  "models": [
+    {
+      "path": "models/exp02_resnet50_ft_crop_aug.h5",
+      "weight": 0.210807
+    },
+    {
+      "path": "models/exp05_vit_b16_two_stage.pt",
+      "weight": 0.187517
+    },
+    {
+      "path": "/workspace/user4/emotion-fullcombo/models/exp10_vit_fullcombo.pt",
+      "weight": 0.001253
+    },
+    {
+      "path": "/workspace/user4/emotion-fullcombo/models/exp10_vit_fullcombo.swa.pt",
+      "weight": 0.321787
+    },
+    {
+      "path": "/workspace/user4/emotion-fullcombo/models/exp11_dinov3_fullcombo.swa.pt",
+      "weight": 0.080358
+    },
+    {
+      "path": "models/exp09_siglip_kd_tsoff_T4_a07_uf4.pt",
+      "weight": 0.198277
+    }
+  ]
+}

@@ -749,11 +749,23 @@ def _load_torch_vit(model_path: Path,
     except ImportError as e:
         raise ImportError("timm 필요: pip install timm") from e
 
-    model_name = meta.get("model_name") or args.get("model") or "vit_base_patch16_224"
+    # fullcombo 계열은 args["backbone"] 에 timm model_name 을 저장한다 (DINOv3 등).
+    # 이전 계열은 args["model"] 또는 meta["model_name"] 을 썼으므로 폴백 체인을 함께 둔다.
+    model_name = (meta.get("model_name")
+                  or args.get("backbone")
+                  or args.get("model")
+                  or "vit_base_patch16_224")
     img_size = int(meta.get("img_size") or args.get("img_size") or 224)
     num_classes = int(len(meta.get("classes") or CLASSES))
 
-    model = timm.create_model(model_name, pretrained=False, num_classes=num_classes)
+    # DINOv3 / DINOv2 등 img_size 인자를 받는 백본은 학습 시 img_size 그대로 전달해야
+    # positional embedding 이 맞는다. 일부 백본은 미지원 → TypeError fallback.
+    try:
+        model = timm.create_model(model_name, pretrained=False,
+                                  num_classes=num_classes, img_size=img_size)
+    except TypeError:
+        model = timm.create_model(model_name, pretrained=False,
+                                  num_classes=num_classes)
     state = ckpt.get("model")
     if state is None:
         raise RuntimeError("ckpt['model'] state_dict 가 없음.")
