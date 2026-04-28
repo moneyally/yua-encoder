@@ -1,0 +1,445 @@
+{
+  "n_samples": 1200,
+  "top1_accuracy": 0.8758,
+  "top2_accuracy": 0.9467,
+  "macro_f1": 0.876,
+  "macro_precision": 0.8775,
+  "macro_recall": 0.8758,
+  "cohen_kappa": 0.8344,
+  "roc_auc_macro_ovr": 0.9658,
+  "roc_auc_weighted_ovr": 0.9658,
+  "nll": 0.4175,
+  "brier_multiclass": 0.2058,
+  "ece_10bin": 0.0392,
+  "per_class": {
+    "anger": {
+      "precision": 0.8414,
+      "recall": 0.8133,
+      "f1": 0.8271,
+      "support": 300
+    },
+    "happy": {
+      "precision": 0.9699,
+      "recall": 0.9667,
+      "f1": 0.9683,
+      "support": 300
+    },
+    "panic": {
+      "precision": 0.8049,
+      "recall": 0.88,
+      "f1": 0.8408,
+      "support": 300
+    },
+    "sadness": {
+      "precision": 0.894,
+      "recall": 0.8433,
+      "f1": 0.8679,
+      "support": 300
+    }
+  },
+  "confusion_matrix": [
+    [
+      244,
+      2,
+      35,
+      19
+    ],
+    [
+      1,
+      290,
+      8,
+      1
+    ],
+    [
+      22,
+      4,
+      264,
+      10
+    ],
+    [
+      23,
+      3,
+      21,
+      253
+    ]
+  ],
+  "classes": [
+    "anger",
+    "happy",
+    "panic",
+    "sadness"
+  ],
+  "config": "models/ensemble_fc_I_5m_exp11.json",
+  "crop_mode": "bbox",
+  "per_member": {
+    "exp02_resnet50_ft_crop_aug": {
+      "n_samples": 1200,
+      "top1_accuracy": 0.7758,
+      "top2_accuracy": 0.905,
+      "macro_f1": 0.7747,
+      "macro_precision": 0.7754,
+      "macro_recall": 0.7758,
+      "cohen_kappa": 0.7011,
+      "roc_auc_macro_ovr": 0.9269,
+      "roc_auc_weighted_ovr": 0.9269,
+      "nll": 0.6362,
+      "brier_multiclass": 0.319,
+      "ece_10bin": 0.0304,
+      "per_class": {
+        "anger": {
+          "precision": 0.6794,
+          "recall": 0.7133,
+          "f1": 0.6959,
+          "support": 300
+        },
+        "happy": {
+          "precision": 0.8754,
+          "recall": 0.9367,
+          "f1": 0.905,
+          "support": 300
+        },
+        "panic": {
+          "precision": 0.7807,
+          "recall": 0.7,
+          "f1": 0.7381,
+          "support": 300
+        },
+        "sadness": {
+          "precision": 0.7661,
+          "recall": 0.7533,
+          "f1": 0.7597,
+          "support": 300
+        }
+      },
+      "confusion_matrix": [
+        [
+          214,
+          10,
+          30,
+          46
+        ],
+        [
+          7,
+          281,
+          8,
+          4
+        ],
+        [
+          47,
+          24,
+          210,
+          19
+        ],
+        [
+          47,
+          6,
+          21,
+          226
+        ]
+      ],
+      "classes": [
+        "anger",
+        "happy",
+        "panic",
+        "sadness"
+      ]
+    },
+    "exp05_vit_b16_two_stage": {
+      "n_samples": 1200,
+      "top1_accuracy": 0.8383,
+      "top2_accuracy": 0.9408,
+      "macro_f1": 0.8397,
+      "macro_precision": 0.8436,
+      "macro_recall": 0.8383,
+      "cohen_kappa": 0.7844,
+      "roc_auc_macro_ovr": 0.9413,
+      "roc_auc_weighted_ovr": 0.9413,
+      "nll": 0.5223,
+      "brier_multiclass": 0.2516,
+      "ece_10bin": 0.0309,
+      "per_class": {
+        "anger": {
+          "precision": 0.7373,
+          "recall": 0.8233,
+          "f1": 0.778,
+          "support": 300
+        },
+        "happy": {
+          "precision": 0.9824,
+          "recall": 0.93,
+          "f1": 0.9555,
+          "support": 300
+        },
+        "panic": {
+          "precision": 0.8462,
+          "recall": 0.77,
+          "f1": 0.8063,
+          "support": 300
+        },
+        "sadness": {
+          "precision": 0.8084,
+          "recall": 0.83,
+          "f1": 0.8191,
+          "support": 300
+        }
+      },
+      "confusion_matrix": [
+        [
+          247,
+          0,
+          21,
+          32
+        ],
+        [
+          6,
+          279,
+          10,
+          5
+        ],
+        [
+          44,
+          3,
+          231,
+          22
+        ],
+        [
+          38,
+          2,
+          11,
+          249
+        ]
+      ],
+      "classes": [
+        "anger",
+        "happy",
+        "panic",
+        "sadness"
+      ]
+    },
+    "exp10_vit_fullcombo.swa": {
+      "n_samples": 1200,
+      "top1_accuracy": 0.8442,
+      "top2_accuracy": 0.9475,
+      "macro_f1": 0.8444,
+      "macro_precision": 0.855,
+      "macro_recall": 0.8442,
+      "cohen_kappa": 0.7922,
+      "roc_auc_macro_ovr": 0.9629,
+      "roc_auc_weighted_ovr": 0.9629,
+      "nll": 0.4737,
+      "brier_multiclass": 0.2398,
+      "ece_10bin": 0.0411,
+      "per_class": {
+        "anger": {
+          "precision": 0.869,
+          "recall": 0.73,
+          "f1": 0.7935,
+          "support": 300
+        },
+        "happy": {
+          "precision": 0.973,
+          "recall": 0.96,
+          "f1": 0.9664,
+          "support": 300
+        },
+        "panic": {
+          "precision": 0.7154,
+          "recall": 0.9133,
+          "f1": 0.8023,
+          "support": 300
+        },
+        "sadness": {
+          "precision": 0.8625,
+          "recall": 0.7733,
+          "f1": 0.8155,
+          "support": 300
+        }
+      },
+      "confusion_matrix": [
+        [
+          219,
+          0,
+          52,
+          29
+        ],
+        [
+          1,
+          288,
+          11,
+          0
+        ],
+        [
+          15,
+          3,
+          274,
+          8
+        ],
+        [
+          17,
+          5,
+          46,
+          232
+        ]
+      ],
+      "classes": [
+        "anger",
+        "happy",
+        "panic",
+        "sadness"
+      ]
+    },
+    "exp11_dinov3_fullcombo.swa": {
+      "n_samples": 1200,
+      "top1_accuracy": 0.8517,
+      "top2_accuracy": 0.945,
+      "macro_f1": 0.8528,
+      "macro_precision": 0.8656,
+      "macro_recall": 0.8517,
+      "cohen_kappa": 0.8022,
+      "roc_auc_macro_ovr": 0.9669,
+      "roc_auc_weighted_ovr": 0.9669,
+      "nll": 0.4482,
+      "brier_multiclass": 0.2252,
+      "ece_10bin": 0.0329,
+      "per_class": {
+        "anger": {
+          "precision": 0.8621,
+          "recall": 0.75,
+          "f1": 0.8021,
+          "support": 300
+        },
+        "happy": {
+          "precision": 0.9863,
+          "recall": 0.9633,
+          "f1": 0.9747,
+          "support": 300
+        },
+        "panic": {
+          "precision": 0.7077,
+          "recall": 0.92,
+          "f1": 0.8,
+          "support": 300
+        },
+        "sadness": {
+          "precision": 0.9062,
+          "recall": 0.7733,
+          "f1": 0.8345,
+          "support": 300
+        }
+      },
+      "confusion_matrix": [
+        [
+          225,
+          1,
+          54,
+          20
+        ],
+        [
+          0,
+          289,
+          11,
+          0
+        ],
+        [
+          17,
+          3,
+          276,
+          4
+        ],
+        [
+          19,
+          0,
+          49,
+          232
+        ]
+      ],
+      "classes": [
+        "anger",
+        "happy",
+        "panic",
+        "sadness"
+      ]
+    },
+    "exp09_siglip_kd_tsoff_T4_a07_uf4": {
+      "n_samples": 1200,
+      "top1_accuracy": 0.8333,
+      "top2_accuracy": 0.9383,
+      "macro_f1": 0.8331,
+      "macro_precision": 0.8333,
+      "macro_recall": 0.8333,
+      "cohen_kappa": 0.7778,
+      "roc_auc_macro_ovr": 0.9556,
+      "roc_auc_weighted_ovr": 0.9556,
+      "nll": 0.9198,
+      "brier_multiclass": 0.2807,
+      "ece_10bin": 0.1225,
+      "per_class": {
+        "anger": {
+          "precision": 0.7403,
+          "recall": 0.76,
+          "f1": 0.75,
+          "support": 300
+        },
+        "happy": {
+          "precision": 0.929,
+          "recall": 0.96,
+          "f1": 0.9443,
+          "support": 300
+        },
+        "panic": {
+          "precision": 0.8176,
+          "recall": 0.8067,
+          "f1": 0.8121,
+          "support": 300
+        },
+        "sadness": {
+          "precision": 0.8462,
+          "recall": 0.8067,
+          "f1": 0.8259,
+          "support": 300
+        }
+      },
+      "confusion_matrix": [
+        [
+          228,
+          10,
+          33,
+          29
+        ],
+        [
+          4,
+          288,
+          6,
+          2
+        ],
+        [
+          38,
+          7,
+          242,
+          13
+        ],
+        [
+          38,
+          5,
+          15,
+          242
+        ]
+      ],
+      "classes": [
+        "anger",
+        "happy",
+        "panic",
+        "sadness"
+      ]
+    }
+  },
+  "mcnemar_vs_compare": {
+    "n_a_only_correct": 30,
+    "n_b_only_correct": 22,
+    "chi2": 0.9423,
+    "p_value": 0.3317,
+    "significant_at_0.05": false,
+    "config_a": "models/ensemble_fc_I_5m_exp11.json",
+    "config_b": "models/ensemble_with_kd.json"
+  }
+}

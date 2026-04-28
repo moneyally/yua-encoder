@@ -431,3 +431,231 @@ exp12 첫 번째 run 에서 GPU util 0% 목격 → num_workers 4 가 원인. 수
 - `batch_size` 24 → 32 (VRAM 45GB 여유 활용)
 
 **exp12 재시작 결과 (05:28 KST)**: GPU 94% 활용 확인. epoch 당 시간 ~70~90s 예상.
+
+---
+
+# PART 4 — Full Metrics 패널 측정 (2026-04-23 06:00)
+
+## 18. 앙상블 I (5-member, 0.8758) 지표 패널
+
+GPT 지적 (Top-2 Acc / ROC-AUC / Kappa 부재) 반영해 scripts/eval_metrics_full.py 작성·실행.
+
+### 전체 지표
+
+| 지표 | 값 |
+|---|---:|
+| Top-1 Accuracy | **0.8758** |
+| Top-2 Accuracy | **0.9467** |
+| Macro F1 | **0.8760** |
+| Macro Precision | 0.8775 |
+| Macro Recall | 0.8758 |
+| **Cohen's Kappa** | **0.8344** |
+| **ROC-AUC (OvR macro)** | **0.9658** |
+| ROC-AUC (OvR weighted) | 0.9658 |
+| NLL | 0.4175 |
+| Brier (multiclass) | 0.2058 |
+| ECE (10 bin) | **0.0392** (calibration 양호) |
+
+### Per-class F1 (약점 분석)
+
+| 클래스 | Precision | Recall | F1 | Support |
+|---|---:|---:|---:|---:|
+| happy | 0.9699 | 0.9667 | **0.9683** | 300 |
+| sadness | 0.8940 | 0.8433 | 0.8679 | 300 |
+| panic | 0.8049 | 0.8800 | 0.8408 | 300 |
+| **anger** | 0.8414 | 0.8133 | **0.8271** | 300 |
+
+**anger 가 가장 약함** (P 84.1%, R 81.3%). panic 과 혼동 가능성 높음. 집중 보강 타겟.
+
+## 19. 3조 vs 우리 앙상블 I 정식 비교
+
+| 지표 | 3조 EffV2-M 단독 | 우리 앙상블 I | Δ |
+|---|---:|---:|---:|
+| Top-1 Acc | **0.8854** | 0.8758 | **−0.0096** |
+| Top-2 Acc | **0.9599** | 0.9467 | **−0.0132** |
+| Macro F1 | **0.8854** | 0.8760 | **−0.0094** |
+| Cohen's Kappa | **0.8472** | 0.8344 | **−0.0128** |
+| ROC-AUC | 0.9734 | 0.9658 | −0.0076 |
+
+전 지표에서 3조 근소 우위 (1%p 이내). **anger 가 우리 최약점, 3조도 같은 지표이므로 여기서 역전 여지**.
+
+## 20. McNemar Paired Test — v1.0 (0.8692) vs 신규 I (0.8758)
+
+val 1200 에서 pairwise 비교:
+
+| 항목 | 값 |
+|---|---:|
+| 신규 I 만 맞춘 샘플 | 30 |
+| v1.0 만 맞춘 샘플 | 22 |
+| χ² | 0.94 |
+| **p-value** | **0.33** |
+| 0.05 유의 | **❌ NOT significant** |
+
+**해석**: 0.8692 → 0.8758 (+0.58%p) 은 통계적으로 noise 범위. 진짜 개선 주장하려면 p<0.05 가 되어야 함.  
+→ 3조 이기려면 exp12/13/14 에서 단일 모델 88%+ 확보 필수.
+
+## 21. 전략 재조정 (GPT + McNemar 반영)
+
+### 즉시 채택
+- [x] Top-2 Acc / ROC-AUC / Cohen's Kappa 측정 (이 문서 섹션 18)
+- [x] McNemar paired test (섹션 20)
+- [ ] anger 약점 해결 전략 수립 (섹션 22 예정)
+
+### 보류
+- Multi-objective weight opt (acc+F1+NLL) — exp12/13 끝난 뒤 재탐색 시
+- Knowledge Distillation (앙상블→student) — 시간 여유 시
+
+### 변경
+- **v1.0 → I 승격** 의 통계적 근거 약함 → **메인 제출은 exp12~15 결과 포함한 신규 앙상블** 로 재결정
+
+## 22. Anger 클래스 집중 보강 아이디어 (구현 대기)
+
+현재 anger F1 0.8271 (최약점).  
+가설: "anger" 샘플이 "panic" 과 혼동 쉬움 (둘 다 강한 부정 감정, 얼굴 긴장).
+
+보강 방법:
+1. **sample-weight**: anger 클래스 loss weight ×1.3
+2. **Class-balanced sampling**: anger 과샘플링 (약 1.5× 비율)
+3. **Focal loss**: hard example 에 집중
+4. **soft label smoothing** 재조정: anger 샘플만 α 증가
+5. **Confusion matrix 기반** threshold 튜닝 (inference 시 anger 임계치 낮춤)
+
+exp12 완료 후 현재 최신 model 로 먼저 confusion 상세 분석 → 대응책 적용.
+
+
+---
+
+# PART 5 — exp12/13 반격 + MooseFS I/O 교훈 (2026-04-24)
+
+## 23. exp12 EfficientNetV2-M @384 — **3조 모델 재현 실패**
+
+목표: 3조 1위 EffV2-M 동등 재현 + 우리 fullcombo 레시피로 +%p 뽑기.
+
+### 실행 조건 (v4 — I/O 병목 해결 후)
+```bash
+python scripts/train_vit_fullcombo.py \
+  --name exp12_effnetv2_m_fullcombo \
+  --backbone tf_efficientnetv2_m.in21k_ft_in1k --img-size 384 \
+  --data-root /dev/shm/user4_data/data_rot --preload --preload-size 416 \
+  --stage-a-epochs 5 --epochs 30 --batch-size 48 \
+  --lr-head 1e-3 --lr-backbone 8e-5 \
+  --weight-decay 1e-4 --warmup-epochs 2 \
+  --alpha-kl 0.5 --mixup-alpha 0.2 --mixup-prob 0.5 \
+  --mixup-start-ep 5 --swa-start-ep 18 \
+  --grad-clip 1.0 --min-lr-ratio 0.01 \
+  --seed 42 --num-workers 16 --amp bf16 --crop
+```
+
+### 결과
+| 지표 | exp12 Best (ep17) | exp12 SWA | 3조 EffV2-M |
+|---|---:|---:|---:|
+| val_acc | **0.8408** | 0.8350 | **0.8854** |
+| val_macro_f1 | 0.8397 | 0.8339 | 0.8854 |
+| val_nll | 0.47 | 0.48 | — |
+
+**3조 0.8854 에 −4.46%p 미달**. 우리 fullcombo 레시피 (Soft + Mixup + SWA) 를 붙였는데도 3조 단독 수치 재현 못 함. 
+
+### 원인 진단
+1. **학습법 차이가 전부는 아님** — 3조 pipeline 에 우리가 모르는 요소 존재 (e.g. long warmup / LLRD / progressive resize)
+2. **lr_backbone 8e-5 너무 높음** — CNN Large scale 은 1~3e-5 권장
+3. **Mixup off in Stage A, Stage B 가 plateau** — 우리 레시피가 EffV2 에 최적 아닐 가능성
+4. **RandAugment off / CutMix off** 로 regularization 약함
+
+### 앙상블 기여도
+val ensemble cache 측정 예정. 단독 수치 기준 exp11(0.8633) 보다 2.25%p 낮아 **weight 낮게 잡힐 것** 예상.
+
+## 24. exp13 EVA-02 Large @448 — **진행 중, 유력 후보**
+
+목표: MIM+MAE pretrain (3조 안 건드림) + Large (304M) + fullcombo 풀셋 (CutMix + RandAugment 추가).
+
+### 실행 조건
+```bash
+python scripts/train_vit_fullcombo.py \
+  --name exp13_eva02_l_448_fullcombo \
+  --backbone eva02_large_patch14_448.mim_m38m_ft_in22k_in1k --img-size 448 \
+  --data-root /dev/shm/user4_data/data_rot --preload --preload-size 480 \
+  --stage-a-epochs 3 --epochs 25 --batch-size 16 \
+  --lr-head 5e-4 --lr-backbone 2e-5 \
+  --weight-decay 5e-2 --warmup-epochs 2 \
+  --alpha-kl 0.5 \
+  --mixup-alpha 0.2 --mixup-prob 0.5 \
+  --cutmix-alpha 1.0 --cutmix-switch-prob 0.5 \
+  --rand-augment --ra-num-ops 2 --ra-magnitude 7 \
+  --mixup-start-ep 3 --swa-start-ep 14 \
+  --grad-clip 1.0 --min-lr-ratio 0.01 \
+  --seed 42 --num-workers 16 --amp bf16 --crop
+```
+
+### 진행 중 (KST 08:47)
+
+| ep | stage | val_acc | 비고 |
+|:-:|:-:|:-:|---|
+| 1 | A | **0.7742** | 역대 최고 ep1 (exp10 0.5725 대비 **+0.2017**) |
+| 2 | A | 0.7808 | |
+| 3 | A | 0.8017 | Stage A 끝, best 기록 |
+| 4 | B | 0.8400 | Stage B 진입 |
+| 5 | B | 0.8383 | |
+| 6 | B | 0.8525 | |
+| 7 | B | 0.8542 | **첫 0.85+ 돌파** |
+| 8 | B | 0.8342 | Mixup 적응 (일시 하락) |
+| **9** | **B** | **0.8700** | **🔥 신기록, 0.87+ 돌파** |
+
+남은 16 ep × ~7.5분 = **~2h**, 완주 ~10:50.  
+Best 이미 exp11 SWA (0.8633) 넘음. SWA (ep14~25) 로 **0.88~0.90 유력**.
+
+## 25. 버그 박멸 추가 (누적 8~9건)
+
+| # | 날짜 | 버그 | Fix |
+|:-:|---|---|---|
+| 8 | 04-23 | CutMix 구현에서 `rng.integers()` 사용 — numpy `RandomState` 에 없음 (구버전 API) | `rng.randint()` 로 교체 (smoke QA PASS) |
+| 9 | 04-24 | argparse help `"50%)"` format 충돌 | `"50%%)"` escape |
+
+## 26. 성능 engineering — MooseFS I/O 병목 해결
+
+### 발견
+- `/workspace` 마운트 = `mfs#ca-mtl-1.runpod.net:9421` (MooseFS 분산 FS)
+- 단일 이미지 PIL read+resize 첫 접근: **377ms/img** (로컬 SSD 기대 1~5ms 대비 75~375배)
+- num_workers 16 에서도 metadata server 병목 (MooseFS single master)
+
+### 해결 3단
+1. **`/dev/shm` (tmpfs/RAM) 에 13GB 데이터 복사** — first access RTT 제거
+2. **Dataset preload** — 이미지 decode + bbox crop + pre-resize 를 init 시 1회만, 매 epoch 은 numpy → PIL 즉시
+3. **num_workers 8~16 + persistent_workers + prefetch_factor 4** — worker 재spawn 오버헤드 제거
+
+### 효과
+- exp12 v1: 첫 epoch 30분+ hang (I/O 병목)
+- exp12 v4: 첫 epoch 11분 (preload) + 이후 80초/ep → **30 epoch 60분 완주**
+- GPU 활용률 **25% → 100%** 개선
+
+`scripts/train_vit_fullcombo.py` 에 `--preload --preload-size N` 옵션 영구 추가.
+
+## 27. 3조 "noise 472" 해석 (EDA 대조)
+
+우리 EDA 실측 (`results/annot_consistency.md`):
+
+| 항목 | 건수 |
+|---|---:|
+| 전체 샘플 | 7,194 |
+| **진짜 noise** (bbox/label null) | **13장** |
+| **라벨러 완전 불일치** (3-rater 전원 다름) | 687 (9.55%) |
+| **GT 와 3-rater 1명도 안 맞음** (mismatched) | ~584장 |
+
+3조 "noise 472" 는 진짜 이상치가 아니라 **"라벨러 헷갈린 샘플"** (우리 687 의 subset) 으로 추정.  
+→ 우리도 같은 환경 (라벨 모호성 10%) 에서 학습 중.  
+→ **val 1200 majority agreement = 90.45% = ceiling**.
+
+## 28. 현재 실측 수치 총정리 (KST 08:47)
+
+| 모델 | Best | SWA | NLL | 비고 |
+|---|---:|---:|---:|---|
+| E2 ResNet50 ft | 0.7758 | — | 0.636 | |
+| E4 EfficientNet-B0 | 0.7933 | — | 0.567 | |
+| E5 ViT-B/16 IN21k | 0.8458 | — | 0.698 | |
+| E9 SigLIP + KD | 0.8333 | — | 0.923 | |
+| exp10 ViT fullcombo | 0.8608 | 0.8617 | 0.420 | |
+| **exp11 DINOv3-B fullcombo** | **0.8608** | **0.8633** | **0.408** | |
+| exp12 EffV2-M fullcombo | 0.8408 | 0.8350 | 0.470 | 3조 재현 실패 |
+| **exp13 EVA-02-L fullcombo** | **0.8700** (진행중 ep9) | (예정 ep14~25 SWA) | — | **최고 갱신 진행 중** |
+| **앙상블 I (5m)** | **0.8758** | | 0.418 | 현재 제출 후보 |
+| **목표** | **0.89~0.90** | | | exp13 완주 + 앙상블 재탐색 |
+
