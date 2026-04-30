@@ -213,19 +213,87 @@ def mcnemar_test(pred_a: np.ndarray, pred_b: np.ndarray, y: np.ndarray) -> dict:
 # --------------------------------------------------------------------
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", required=True, help="앙상블 config json")
-    ap.add_argument("--cache-dir", required=True)
+    ap.add_argument("--config", default=None, help="앙상블 config json")
+    ap.add_argument("--model", default=None,
+                    help="단일 모델 평가 시 .pt / .h5 / .json 한 파일 경로")
+    ap.add_argument("--cache-dir", default=None,
+                    help="멤버 probs 캐시 폴더 (--config 일 때 필요)")
     ap.add_argument("--val-dir", default=str(PROJECT / "data_rot/img/val"))
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--out", default=None,
+                    help="지표 패널을 저장할 json 경로 (없으면 stdout 만)")
     ap.add_argument("--crop-mode", default="bbox", choices=["bbox", "raw"])
     ap.add_argument("--compare-config", default=None,
                     help="McNemar test 대상: 두 번째 config (e.g. 구 앙상블)")
     args = ap.parse_args()
 
+    # --model 과 --config 둘 다 없으면 에러, 둘 다면 --config 우선
+    if not args.config and not args.model:
+        ap.error("--config 또는 --model 중 하나는 필수")
+    if args.model and not args.config:
+        # --model 이 .json 이면 --config 로 자동 매핑 (사용자 편의)
+        if str(args.model).endswith(".json"):
+            args.config = args.model
+            args.model = None
+
     # 1) val labels
     val_dir = Path(args.val_dir)
     y, paths = load_val_labels(val_dir)
     print(f"[val] n={len(y)}  val_dir={val_dir}", file=sys.stderr)
+
+    # 단일 모델 분기 — predict.py 직접 호출로 probs 만 뽑고 metrics 계산
+    if args.model and not args.config:
+        single_path = Path(args.model)
+        if not single_path.is_absolute():
+            single_path = PROJECT / single_path
+        if not single_path.is_file():
+            ap.error(f"--model 파일 없음: {single_path}")
+        print(f"[single] {single_path.name}", file=sys.stderr)
+
+        import predict as predict_mod  # noqa: E402
+        m_obj = predict_mod.load_model(single_path)
+        probs_single = np.zeros((len(paths), NUM_CLASSES), dtype=np.float64)
+        from PIL import Image, ImageOps
+        t0 = time.perf_counter() if False else None  # silence
+        import time as _t
+        t0 = _t.perf_counter()
+        for i, p in enumerate(paths):
+            pil = Image.open(p).convert("RGB")
+            pil = ImageOps.exif_transpose(pil)
+            pr = predict_mod.predict_probs(m_obj, pil)
+            probs_single[i] = pr.astype(np.float64)
+            if (i + 1) % 200 == 0 or (i + 1) == len(paths):
+                dt = _t.perf_counter() - t0
+                print(f"  [{i+1}/{len(paths)}] {dt:.1f}s", file=sys.stderr)
+
+        metrics_s = compute_all_metrics(probs_single, y)
+        metrics_s["model"] = str(single_path)
+        metrics_s["crop_mode"] = "predict.py default (auto bbox/MTCNN)"
+
+        if args.out:
+            out = Path(args.out)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            with open(out, "w", encoding="utf-8") as f:
+                json.dump(metrics_s, f, indent=2, ensure_ascii=False)
+            print(f"\n[saved] {out}", file=sys.stderr)
+
+        # stdout 요약
+        print("\n" + "=" * 60)
+        print(f"Single Model Metrics — {single_path.name}")
+        print("=" * 60)
+        for k in ("top1_accuracy", "top2_accuracy", "macro_f1", "macro_precision",
+                  "macro_recall", "cohen_kappa", "roc_auc_macro_ovr",
+                  "roc_auc_weighted_ovr", "nll", "brier_multiclass", "ece_10bin"):
+            v = metrics_s.get(k)
+            print(f"  {k:<30s}  {v}")
+        print("\nPer-class (F1):")
+        for cls, r in metrics_s["per_class"].items():
+            print(f"  {cls:<8s}  P={r['precision']:.4f}  R={r['recall']:.4f}  F1={r['f1']:.4f}  n={r['support']}")
+        return
+
+    if not args.cache_dir:
+        ap.error("--config 사용 시 --cache-dir 필수")
+    if not args.out:
+        ap.error("--config 사용 시 --out 필수")
 
     # 2) config 로드 + 멤버 probs 로드 + weighted avg
     cfg = json.loads(Path(args.config).read_text())

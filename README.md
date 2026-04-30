@@ -24,29 +24,25 @@ pipeline_tag: image-classification
 ![GPU](https://img.shields.io/badge/GPU-A40%2048GB-76B900?logo=nvidia&logoColor=white)
 ![License](https://img.shields.io/badge/license-research--internal-lightgrey)
 
-## 제출물
+## Tutor Test — RunPod 평가 가이드
 
-메인 제출은 **4-model 앙상블** (val 0.8692). [v1.0.0 Release](https://github.com/moneyally/yua-encoder/releases/tag/v1.0.0) 한 곳에서만 받으시면 됩니다. 다른 tag 는 실험 기록용이라 무시하셔도 됩니다.
+평가자가 RunPod 같은 GPU pod 환경에서 처음부터 끝까지 한 흐름으로 실행할 때의 시나리오입니다. 학습 환경과 동일한 PyTorch + TensorFlow 조합 (`requirements_lock.txt`) 으로 재현됩니다.
 
-### 다운받을 파일 (총 6개)
+### 0) 사전 조건
 
-| 파일 | 어디서 받는지 | 용도 |
-|---|---|---|
-| `predict.py` + `scripts/eval_metrics_full.py` | `git clone` (레포 루트) | 추론 + 채점 코드 |
-| `ensemble_with_kd.json` | Release v1.0.0 | **메인 앙상블 config** |
-| `exp05_vit_b16_two_stage.pt` | Release v1.0.0 | 앙상블 멤버 (ViT, PyTorch) |
-| `exp09_siglip_kd_tsoff_T4_a07_uf4.pt` | Release v1.0.0 | 앙상블 멤버 (SigLIP+KD, PyTorch) |
-| `exp02_resnet50_ft_crop_aug.h5` | Release v1.0.0 | 앙상블 멤버 (ResNet50, TensorFlow) |
-| `exp04_effnet_ft_balanced.h5` | Release v1.0.0 | 앙상블 멤버 (EfficientNet-B0, TensorFlow) |
+- GPU 1 장 (CUDA 12.4 호환). A40 / A100 / RTX 3090~4090 / V100 모두 작동합니다.
+- VRAM 권장 8GB+ (앙상블 peak 약 5GB. ViT 단독은 3GB).
+- 디스크 약 5GB (모델 1GB + conda env 4GB).
+- 인터넷 (`gh release download` + `pip install`).
 
-### 한 번에 받기
+### 1) 레포 + 모델 다운로드
 
 ```bash
-# 1) 레포 클론 — predict.py 와 scripts/ 자동 포함
+# 레포 클론 — predict.py / scripts / requirements 자동 포함
 git clone https://github.com/moneyally/yua-encoder.git
 cd yua-encoder
 
-# 2) Release 자산 5개 다운로드 → models/ 폴더로
+# 앙상블 5 파일 한 번에 (총 약 1.0GB)
 mkdir -p models
 gh release download v1.0.0 -R moneyally/yua-encoder -D models/ \
     -p ensemble_with_kd.json \
@@ -56,74 +52,154 @@ gh release download v1.0.0 -R moneyally/yua-encoder -D models/ \
     -p exp09_siglip_kd_tsoff_T4_a07_uf4.pt
 ```
 
-`gh` CLI 가 없으면 [Release 페이지](https://github.com/moneyally/yua-encoder/releases/tag/v1.0.0) 에서 5 개 파일을 직접 받아 `models/` 폴더에 넣으시면 됩니다.
+`gh` CLI 가 없으면 [Release 페이지](https://github.com/moneyally/yua-encoder/releases/tag/v1.0.0) 에서 5 파일을 직접 받아 `models/` 폴더에 넣으시면 됩니다.
 
-### 환경 구축
+### 2) 받아야 할 파일 정리
+
+| 파일 | 어디서 | 크기 | 역할 |
+|---|---|---:|---|
+| `predict.py` | `git clone` | 50KB | 추론 진입점 |
+| `scripts/eval_metrics_full.py` | `git clone` | 12KB | 채점 + 지표 패널 |
+| `models/ensemble_with_kd.json` | Release v1.0.0 | 1.3KB | **메인 — 앙상블 명세** |
+| `models/exp05_vit_b16_two_stage.pt` | Release v1.0.0 | 327MB | 멤버 (ViT, weight 0.523) / 단독 fallback |
+| `models/exp09_siglip_kd_tsoff_T4_a07_uf4.pt` | Release v1.0.0 | 468MB | 멤버 (SigLIP+KD, weight 0.363) |
+| `models/exp02_resnet50_ft_crop_aug.h5` | Release v1.0.0 | 205MB | 멤버 (ResNet50, weight 0.041) |
+| `models/exp04_effnet_ft_balanced.h5` | Release v1.0.0 | 32MB | 멤버 (EfficientNet, weight 0.073) |
+
+다른 tag (`exp10`, `exp11`, `exp13` 등) 는 실험 기록용이라 무시하셔도 됩니다.
+
+### 3) conda 환경 구축
 
 ```bash
 bash scripts/restore_env.sh user4_env
 conda activate user4_env
 ```
 
-핵심 라이브러리: PyTorch 2.6 + CUDA 12.4 / TensorFlow 2.18 / timm 1.0.26 / facenet-pytorch / Python 3.10. 전체 lock 은 [`requirements_lock.txt`](./requirements_lock.txt). 자세한 건 아래 [Environment / Requirements](#environment--requirements) 섹션 참고.
+`requirements_lock.txt` 의 PyTorch 2.6 + cu124 / TensorFlow 2.18 / timm 1.0.26 / facenet-pytorch / Python 3.10 을 그대로 설치합니다. 예상 5 ~ 10 분.
 
-### 평가 실행 (앙상블 — 메인)
+### 4) 평가 실행 — 앙상블 (메인 제출, 권장)
 
-폴더 구조가 `class/이미지` (anger/ happy/ panic/ sadness/) 형태일 때 한 번에 채점이 됩니다.
+폴더 구조가 `class/이미지` 형태일 때 한 줄로 채점 + 지표 패널까지 산출됩니다.
+
+```
+test_1500/
+├── anger/
+├── happy/
+├── panic/
+└── sadness/
+```
 
 ```bash
 python scripts/eval_metrics_full.py \
-    --model models/ensemble_with_kd.json \
-    --val-dir /path/to/test_1500
+    --config models/ensemble_with_kd.json \
+    --val-dir /path/to/test_1500 \
+    --cache-dir results/_eval_cache \
+    --out results/_eval_test_1500.json \
+    --crop-mode bbox
 ```
+
+내부 동작:
+
+1. `ensemble_with_kd.json` 을 열어 멤버 4 개 path 와 weight `[0.041, 0.073, 0.523, 0.363]` 를 읽습니다.
+2. 각 멤버를 차례로 메모리에 로드합니다 — TF `.h5` 는 Keras `load_model`, PyTorch `.pt` 는 timm `create_model + load_state_dict`.
+3. `--val-dir` 의 이미지를 [Preprocessing](#preprocessing--입력-이미지--모델-입력) 5 단계로 처리합니다 (EXIF → 얼굴 crop → 모델별 resize → ImageNet 정규화 → tensor).
+4. 멤버 4 개가 각자 softmax 확률을 출력합니다 (4 모델 × N 이미지 × 4 클래스).
+5. `Σ w_i · probs_i` 가중 평균 → argmax 로 최종 라벨을 정합니다.
+6. accuracy / Top-2 / Macro F1 / Cohen's Kappa / ROC-AUC / NLL / per-class 지표 + confusion matrix 를 한 번에 계산합니다.
+
+`--cache-dir` 에는 멤버별 softmax 가 npz 로 저장되어 두 번째 실행부터는 즉시 끝납니다. cold start 시 TensorFlow XLA 컴파일이 약 120 초 소요됩니다. 이후 warm 호출은 0.7s 이하입니다.
 
 출력 (val 1200 기준 실측):
 
 ```
-Top-1 Accuracy:  0.8758
-Top-2 Accuracy:  0.9467
-Macro F1:        0.8760
-Cohen's Kappa:   0.8344
-ROC-AUC (OvR):   0.9658
-NLL:             0.4175
+Top-1 Accuracy:  0.8692
+Top-2 Accuracy:  0.9383
+Macro F1:        0.8697
+Cohen's Kappa:   0.8256
+ROC-AUC (OvR):   0.9575
+NLL:             0.4593
 
 per-class:
-  anger    P=0.8414  R=0.8133  F1=0.8271  n=300
-  happy    P=0.9699  R=0.9667  F1=0.9683  n=300
-  panic    P=0.8049  R=0.8800  F1=0.8408  n=300
-  sadness  P=0.8940  R=0.8433  F1=0.8679  n=300
+  anger    P=0.7868  R=0.8367  F1=0.8110  n=300
+  happy    P=0.9728  R=0.9533  F1=0.9630  n=300
+  panic    P=0.8667  R=0.8233  F1=0.8444  n=300
+  sadness  P=0.8576  R=0.8633  F1=0.8605  n=300
 ```
 
-cold start 시 TensorFlow XLA 컴파일이 약 120 초 소요됩니다. 이후 warm 호출은 0.7s 이하입니다.
+### 5) 평가 실행 — 단일 모델 (fallback)
 
-### 단일 모델로 평가하고 싶을 때 (fallback)
-
-`--model` 에 `.pt` 또는 `.h5` 하나만 넣어도 동일하게 작동합니다.
+`--config` 대신 `--model` 에 `.pt` 또는 `.h5` 한 파일을 넘기면 단일 모델로만 평가합니다. 환경 제약 (TF 또는 PyTorch 한쪽만 설치) 이나 빠른 sanity check 용입니다.
 
 ```bash
-# ViT 단일 (.pt) — val 0.8458, TensorFlow 환경 없을 때
+# ViT-B/16 단일 (.pt) — 권장 fallback. val 0.8458, PyTorch 만으로 동작
 python scripts/eval_metrics_full.py \
     --model models/exp05_vit_b16_two_stage.pt \
-    --val-dir /path/to/test_1500
+    --val-dir /path/to/test_1500 \
+    --out results/_eval_test_1500_vit.json
 
-# ResNet50 (.h5) — val 0.7758, PyTorch 환경 없을 때
+# SigLIP+KD (.pt) — val 0.8333, PyTorch 만으로 동작
+python scripts/eval_metrics_full.py \
+    --model models/exp09_siglip_kd_tsoff_T4_a07_uf4.pt \
+    --val-dir /path/to/test_1500 \
+    --out results/_eval_test_1500_siglip.json
+
+# ResNet50 (.h5) — val 0.7758, TensorFlow 만으로 동작
 python scripts/eval_metrics_full.py \
     --model models/exp02_resnet50_ft_crop_aug.h5 \
-    --val-dir /path/to/test_1500
+    --val-dir /path/to/test_1500 \
+    --out results/_eval_test_1500_resnet.json
+
+# EfficientNet-B0 (.h5) — val 0.7933, TensorFlow 만으로 동작
+python scripts/eval_metrics_full.py \
+    --model models/exp04_effnet_ft_balanced.h5 \
+    --val-dir /path/to/test_1500 \
+    --out results/_eval_test_1500_effnet.json
 ```
 
-### 폴더 구조가 다르거나 라벨 csv 가 따로 있을 때
+`predict.py` 가 확장자로 자동 분기합니다 ([Model Workflow](#model-workflow---pt--h5-가-어떻게-추론되는지) 섹션 참고).
+
+| 확장자 | 분기 | 비고 |
+|---|---|---|
+| `.json` | 앙상블 (4 멤버 weighted soft voting) | 메인 제출 |
+| `.pt` | PyTorch state_dict (timm ViT / SigLIP / EVA-02 자동 인식) | TF 환경 없을 때 |
+| `.h5` | Keras 모델 (ResNet50 / EfficientNet) | PyTorch 환경 없을 때 |
+
+### 6) 폴더 구조가 다르거나 라벨 csv 가 따로 있을 때
+
+라벨이 별도 csv 로 있고 이미지가 한 폴더에 몰려 있을 때는 `predict.py` 로 추론만 먼저 한 뒤 그 결과를 라벨과 매칭합니다.
 
 ```bash
+# 1) 추론 → ndjson
 python predict.py \
     --model models/ensemble_with_kd.json \
     --image-dir /path/to/test_1500/ \
     > predictions.ndjson
-
-python scripts/eval_metrics_full.py \
-    --predictions predictions.ndjson \
-    --ground-truth /path/to/labels.csv
 ```
+
+`predictions.ndjson` 은 한 줄 한 이미지의 JSON. 라벨 csv 와 매칭해 accuracy 를 손쉽게 계산할 수 있습니다 (csv 형식은 `filename,label` 헤더 포함).
+
+### 7) 단일 이미지 한 번에 확인 (sanity)
+
+설치·다운로드가 잘 됐는지 빠르게 확인할 때:
+
+```bash
+python predict.py --model models/ensemble_with_kd.json --image sample.jpg
+```
+
+출력: `Predicted: anger (confidence 0.92)`
+
+여러 장이면 `--images a.jpg b.jpg c.jpg` 또는 `--image-dir /path/to/folder/`.
+
+### 8) 자주 만나는 상황
+
+| 상황 | 해결 |
+|---|---|
+| `gh: command not found` | [Release 페이지](https://github.com/moneyally/yua-encoder/releases/tag/v1.0.0) 에서 5 파일 수동 다운로드 |
+| TF 설치 실패 (Apple silicon 등) | `--model models/exp05_vit_b16_two_stage.pt` 로 ViT 단독 fallback (val 0.8458) |
+| PyTorch CUDA 안 맞음 | `requirements_lock.txt` 에서 `torch==2.6.0+cu124` 줄을 본인 CUDA 버전에 맞춰 수정 |
+| OOM (VRAM 부족) | 단독 모델 fallback 으로 전환 (3GB 면 충분) |
+| Cold start 120 초 정지 | TensorFlow XLA 컴파일 정상 동작. 첫 호출 한 번만 발생 |
+| 폴더에 `class/` 없음 | 위 6) 처럼 ndjson + 라벨 csv 매칭 |
 
 ---
 
