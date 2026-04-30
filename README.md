@@ -24,7 +24,7 @@ pipeline_tag: image-classification
 ![GPU](https://img.shields.io/badge/GPU-A40%2048GB-76B900?logo=nvidia&logoColor=white)
 ![License](https://img.shields.io/badge/license-research--internal-lightgrey)
 
-## Tutor Test — RunPod 평가 가이드
+## 심사자 평가 — RunPod 가이드
 
 평가자가 RunPod 같은 GPU pod 환경에서 처음부터 끝까지 한 흐름으로 실행할 때의 시나리오입니다. 학습 환경과 동일한 PyTorch + TensorFlow 조합 (`requirements_lock.txt`) 으로 재현됩니다.
 
@@ -991,85 +991,6 @@ predict.predict(model, img)
 ```
 
 핵심: 멤버 간 face crop 을 중복 호출하지 않도록 `predict.py:_load_ensemble` 에서 MTCNN 결과를 한 번만 계산하고 4 모델이 공유합니다. warm latency 가 1.2s → 0.7s 로 줄었습니다.
-
-## Tutor Test — 1500장 채점 실행
-
-튜터가 별도로 보유한 1500 장 test set 으로 accuracy 평가. 메인은 앙상블 (`.json`) 이고 fallback 은 ViT 단일 (`.pt`) 이나 ResNet50 (`.h5`) 입니다. `predict.py` 가 확장자로 자동 분기합니다.
-
-- `.json` → 앙상블 config (4 멤버 weighted soft voting)
-- `.pt` → PyTorch state_dict (timm ViT / SigLIP / EVA-02 자동 인식)
-- `.h5` → Keras 모델 (ResNet50, EfficientNet)
-
-### 폴더 구조가 `class/이미지` 일 때 (val 1200 과 동일 구조)
-
-```
-tutor_test_1500/
-├── anger/
-├── happy/
-├── panic/
-└── sadness/
-```
-
-폴더명이 정답 라벨이라 한 번에 accuracy + per-class metric 까지 산출됩니다.
-
-```bash
-conda activate user4_env
-
-# 메인 제출 (앙상블, .json)
-python scripts/eval_metrics_full.py \
-    --model models/ensemble_with_kd.json \
-    --val-dir /path/to/tutor_test_1500
-
-# Fallback — ViT 단일 (.pt). TF 환경 없을 때
-python scripts/eval_metrics_full.py \
-    --model models/exp05_vit_b16_two_stage.pt \
-    --val-dir /path/to/tutor_test_1500
-
-# Fallback — ResNet50 (.h5). PyTorch 환경 없을 때
-python scripts/eval_metrics_full.py \
-    --model models/exp02_resnet50_ft_crop_aug.h5 \
-    --val-dir /path/to/tutor_test_1500
-```
-
-val 1200 기준 메인 앙상블 출력:
-
-```
-Top-1 Accuracy:  0.8758
-Top-2 Accuracy:  0.9467
-Macro F1:        0.8760
-Cohen's Kappa:   0.8344
-ROC-AUC (OvR):   0.9658
-NLL:             0.4175
-
-per-class:
-  anger    P=0.8414  R=0.8133  F1=0.8271  n=300
-  happy    P=0.9699  R=0.9667  F1=0.9683  n=300
-  panic    P=0.8049  R=0.8800  F1=0.8408  n=300
-  sadness  P=0.8940  R=0.8433  F1=0.8679  n=300
-```
-
-### 폴더 구조가 다를 때 (이미지만 모여있는 경우)
-
-라벨이 csv 로 따로 있을 때는 추론 결과를 ndjson 으로 뽑은 뒤 `eval_metrics_full.py` 에 넘깁니다.
-
-```bash
-python predict.py \
-    --model models/ensemble_with_kd.json \
-    --image-dir /path/to/tutor_test_1500/ \
-    > tutor_predictions.ndjson
-
-python scripts/eval_metrics_full.py \
-    --predictions tutor_predictions.ndjson \
-    --ground-truth /path/to/tutor_labels.csv
-```
-
-### 단일 이미지 한 번에 확인
-
-```bash
-python predict.py --model models/ensemble_with_kd.json --image sample.jpg
-```
-
-출력: `Predicted: anger (confidence 0.92)`
 
 ## Training (재현)
 
