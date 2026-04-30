@@ -69,6 +69,47 @@ def load_member_probs(model_path: Path, cache_dir: Path, crop_mode: str = "bbox"
     return dat["probs"].astype(np.float64), dat.get("paths", None)
 
 
+def infer_member_probs(model_path: Path, paths: list, crop_mode: str = "bbox"):
+    """cache 없을 때 predict.py 로 직접 추론. cache_dir 에 저장도 함."""
+    import time as _t
+    from PIL import Image, ImageOps
+    import predict as predict_mod  # noqa: E402
+
+    print(f"  [infer] {model_path.name} 직접 추론 (cache 없음, 첫 실행)", file=sys.stderr)
+    m_obj = predict_mod.load_model(model_path)
+    n = len(paths)
+    probs = np.zeros((n, NUM_CLASSES), dtype=np.float64)
+    t0 = _t.perf_counter()
+    for i, p in enumerate(paths):
+        pil = Image.open(p).convert("RGB")
+        pil = ImageOps.exif_transpose(pil)
+        pr = predict_mod.predict_probs(m_obj, pil)
+        probs[i] = pr.astype(np.float64)
+        if (i + 1) % 200 == 0 or (i + 1) == n:
+            dt = _t.perf_counter() - t0
+            print(f"    [{i+1}/{n}] {dt:.0f}s", file=sys.stderr)
+    return probs
+
+
+def load_or_infer_member_probs(model_path: Path, cache_dir: Path,
+                               paths: list, crop_mode: str = "bbox"):
+    """cache hit 시 npz 로드, miss 시 직접 추론 후 cache 저장."""
+    try:
+        return load_member_probs(model_path, cache_dir, crop_mode=crop_mode)
+    except FileNotFoundError:
+        probs = infer_member_probs(model_path, paths, crop_mode=crop_mode)
+        # 이번 결과를 cache 에 저장 — 다음 실행 빠르게
+        try:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            key = _model_cache_key(model_path)
+            cache_file = cache_dir / f"{key}_{crop_mode}_val_probs.npz"
+            np.savez_compressed(cache_file, probs=probs.astype(np.float32))
+            print(f"  [cache] saved → {cache_file.name}", file=sys.stderr)
+        except Exception as e:
+            print(f"  [cache] save 실패 (무시): {e}", file=sys.stderr)
+        return probs, None
+
+
 def load_val_labels(val_dir: Path):
     IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
     paths, y = [], []
@@ -309,7 +350,8 @@ def main():
         # symlink 타고 실제 파일로
         if mpath.is_symlink():
             mpath = Path(os.path.realpath(mpath))
-        p, _ = load_member_probs(mpath, cache_dir, crop_mode=args.crop_mode)
+        p, _ = load_or_infer_member_probs(mpath, cache_dir, paths=paths,
+                                           crop_mode=args.crop_mode)
         probs_list.append(p)
         weights.append(float(m["weight"]))
         print(f"  [{Path(m['path']).name}] w={m['weight']:.4f}", file=sys.stderr)
