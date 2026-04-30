@@ -1215,9 +1215,8 @@ pip install numpy pandas scikit-learn matplotlib Pillow opencv-python
 
 ## Team & Credits
 
-2조, 5인 팀 (2026년 봄 최종 프로젝트):
+2조, 4인 팀 (2026년 봄 최종 프로젝트):
 
-- 김대원
 - 박재성
 - 반주형
 - 하창수
