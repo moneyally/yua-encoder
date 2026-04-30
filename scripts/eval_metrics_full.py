@@ -55,7 +55,9 @@ def _model_cache_key(model_path: Path) -> str:
     return f"{model_path.stem}.mtime{mtime_ns}"
 
 
-def load_member_probs(model_path: Path, cache_dir: Path, crop_mode: str = "bbox"):
+def load_member_probs(model_path: Path, cache_dir: Path, crop_mode: str = "bbox",
+                      expected_n: int = -1):
+    """cache 에서 probs 로드. expected_n 주어지면 길이 일치 안 하는 cache 는 무시 (강제 re-infer)."""
     key = _model_cache_key(model_path)
     cache_file = cache_dir / f"{key}_{crop_mode}_val_probs.npz"
     if not cache_file.is_file():
@@ -66,7 +68,14 @@ def load_member_probs(model_path: Path, cache_dir: Path, crop_mode: str = "bbox"
             raise FileNotFoundError(f"cache 없음: {model_path.name} (stem={stem}, crop={crop_mode})")
         cache_file = candidates[-1]  # 가장 최신 mtime
     dat = np.load(cache_file, allow_pickle=False)
-    return dat["probs"].astype(np.float64), dat.get("paths", None)
+    probs = dat["probs"].astype(np.float64)
+    # 길이 sanity check — val_dir 가 다르면 cache 길이가 안 맞을 수 있음
+    if expected_n >= 0 and probs.shape[0] != expected_n:
+        raise FileNotFoundError(
+            f"cache 길이 불일치: {model_path.name} cached={probs.shape[0]} vs expected={expected_n}. "
+            f"새 val_dir 일 가능성 → 직접 추론으로 강제 fallback."
+        )
+    return probs, dat.get("paths", None)
 
 
 def infer_member_probs(model_path: Path, paths: list, crop_mode: str = "bbox"):
@@ -93,10 +102,13 @@ def infer_member_probs(model_path: Path, paths: list, crop_mode: str = "bbox"):
 
 def load_or_infer_member_probs(model_path: Path, cache_dir: Path,
                                paths: list, crop_mode: str = "bbox"):
-    """cache hit 시 npz 로드, miss 시 직접 추론 후 cache 저장."""
+    """cache hit 시 npz 로드 (길이 검증 후), miss/길이 mismatch 시 직접 추론 후 cache 저장."""
     try:
-        return load_member_probs(model_path, cache_dir, crop_mode=crop_mode)
-    except FileNotFoundError:
+        return load_member_probs(model_path, cache_dir, crop_mode=crop_mode,
+                                 expected_n=len(paths))
+    except FileNotFoundError as e:
+        if "불일치" in str(e):
+            print(f"  [warn] {e}", file=sys.stderr)
         probs = infer_member_probs(model_path, paths, crop_mode=crop_mode)
         # 이번 결과를 cache 에 저장 — 다음 실행 빠르게
         try:
@@ -294,7 +306,6 @@ def main():
         m_obj = predict_mod.load_model(single_path)
         probs_single = np.zeros((len(paths), NUM_CLASSES), dtype=np.float64)
         from PIL import Image, ImageOps
-        t0 = time.perf_counter() if False else None  # silence
         import time as _t
         t0 = _t.perf_counter()
         for i, p in enumerate(paths):
@@ -342,7 +353,8 @@ def main():
     print(f"[config] {args.config}  M={len(models)}", file=sys.stderr)
 
     cache_dir = Path(args.cache_dir)
-    probs_list, weights = [], []
+    probs_list, weights, names = [], [], []
+    failed_members = []
     for m in models:
         mpath = Path(m["path"])
         if not mpath.is_absolute():
@@ -350,11 +362,23 @@ def main():
         # symlink 타고 실제 파일로
         if mpath.is_symlink():
             mpath = Path(os.path.realpath(mpath))
-        p, _ = load_or_infer_member_probs(mpath, cache_dir, paths=paths,
-                                           crop_mode=args.crop_mode)
-        probs_list.append(p)
-        weights.append(float(m["weight"]))
-        print(f"  [{Path(m['path']).name}] w={m['weight']:.4f}", file=sys.stderr)
+        try:
+            p, _ = load_or_infer_member_probs(mpath, cache_dir, paths=paths,
+                                              crop_mode=args.crop_mode)
+            probs_list.append(p)
+            weights.append(float(m["weight"]))
+            names.append(Path(m["path"]).name)
+            print(f"  [{Path(m['path']).name}] w={m['weight']:.4f}", file=sys.stderr)
+        except Exception as e:
+            failed_members.append((Path(m["path"]).name, str(e)[:200]))
+            print(f"  [SKIP] {Path(m['path']).name} 로드 실패 — {str(e)[:120]}", file=sys.stderr)
+
+    if not probs_list:
+        ap.error(f"모든 멤버 로드 실패. 환경 (TF/PyTorch 설치) 확인 필요. 실패 목록: {failed_members}")
+    if failed_members:
+        print(f"\n[warn] 멤버 {len(failed_members)} 개 로드 실패 → 남은 {len(probs_list)} 개로 앙상블 진행. "
+              f"weight 재정규화됨.\n        실패: {[n for n, _ in failed_members]}\n",
+              file=sys.stderr)
 
     weights = np.array(weights, dtype=np.float64)
     weights = weights / weights.sum()
